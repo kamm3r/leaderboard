@@ -4,14 +4,7 @@ import { z } from 'zod';
 import { t } from '../trpc';
 import { prisma } from '../db/client';
 import { observable } from '@trpc/server/observable';
-
-const addAthleteInput = z.object({
-  firstName: z.string(),
-  lastName: z.string(),
-  club: z.string(),
-  pb: z.number().optional(),
-  sb: z.number().optional(),
-});
+import { addAthleteInput } from '../../shared/add-athlete-validator';
 
 type Result = {
   attempt: number;
@@ -23,7 +16,7 @@ export const resultsRouter = t.router({
   addAthlete: t.procedure.input(addAthleteInput).mutation(async ({ input }) => {
     const addAthlete = await prisma.athlete.create({
       data: {
-        athleteName: input.firstName + input.lastName,
+        athleteName: input.firstName + ' ' + input.lastName,
         club: input.club,
         PB: input.pb,
         SB: input.sb,
@@ -31,6 +24,12 @@ export const resultsRouter = t.router({
     });
 
     return addAthlete;
+  }),
+  getAllAthletes: t.procedure.query(async () => {
+    const athletes = await prisma.athlete.findMany({
+      include: { result: true },
+    });
+    return athletes;
   }),
   getAllAttempts: t.procedure.query(async () => {
     const results = await prisma.result.findMany({

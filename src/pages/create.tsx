@@ -2,164 +2,138 @@ import Layout from '../components/layout';
 import { useRouter } from 'next/router';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { trpc } from '../utils/trpc';
+import {
+  addAthleteInput,
+  AddAthleteInputType,
+} from '../shared/add-athlete-validator';
 
-export default function Create() {
+const AddAthleteForm = () => {
   const router = useRouter();
 
-  // const { mutate, error, isLoading, isError, reset } = trpc.useMutation(
-  //   ['results.create-results'],
-  //   {
-  //     onSuccess: () => router.push(`/`),
-  //   }
-  // );
+  const { mutate, isLoading, data } = trpc.result.addAthlete.useMutation({
+    onSuccess: (data) => {
+      console.log('submitted', data);
 
-  // const {
-  //   handleSubmit,
-  //   register,
-  //   control,
-  //   formState: { errors },
-  // } = useForm<CreateResultInput>({
-  //   resolver: zodResolver(createSchema),
-  //   defaultValues: {
-  //     attempts: [],
-  //   },
-  // });
+      router.push(`/`);
+    },
+  });
 
-  // const { fields, append, prepend, remove, swap, move, insert } =
-  //   useFieldArray<CreateResultInputType>({
-  //     name: 'attempts', // unique name for your Field Array,
-  //     control, // control props comes from useForm (optional: if you are using FormContext)
-  //   });
+  const {
+    handleSubmit,
+    register,
+    formState: { errors },
+  } = useForm<AddAthleteInputType>({
+    resolver: zodResolver(addAthleteInput),
+  });
 
-  // const onSubmit = (data: CreateResultInput) =>
-  //   mutate(data, { onSuccess: () => reset() });
-
-  // if (isLoading)
-  //   return (
-  //     <div className='antialiased min-h-screen flex items-center justify-center'>
-  //       <p className='text-white/40'>Loading...</p>
-  //     </div>
-  //   );
-  // if (isError)
-  //   return (
-  //     <div className='antialiased min-h-screen flex items-center justify-center'>
-  //       <p className='text-white/40'>{error.message}</p>
-  //     </div>
-  //   );
+  if (isLoading || data)
+    return (
+      <div className='antialiased min-h-screen flex items-center justify-center'>
+        <p className='text-white/40'>Loading...</p>
+      </div>
+    );
   // // Works W in the chat
 
   return (
-    <Layout>
-      <div className='max-w-xl mx-auto py-12 md:max-w-2xl'>
-        {/* <form onSubmit={handleSubmit(onSubmit)} className='w-full'> */}
-        <form className='w-full'>
-          {/* {isError && error.message} */}
-          <fieldset className='col-span-6 sm:col-span-4 border border-gray-200'>
-            <legend>Create Results</legend>
-            <ul className='grid grid-cols-1 w-full gap-x-5 gap-y-3 md:grid-cols-2 mt-4'>
-              <li className='flex items-end space-x-3'>
-                <div className='col-span-6 sm:col-span-3'>
-                  <label className='block text-sm font-medium'>Name:</label>
-                  <input
-                    className='py-2 px-3 text-black mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md'
-                    // {...register('athlete.athleteName')}
-                    // defaultValue='marco'
-                  />
-                </div>
+    <Layout title='Create Athlete'>
+      <div className='max-w-xl m-auto'>
+        <div className='bg-neutral-800 p-5 rounded'>
+          <h1 className='font-semibold text-xl'>Add athlete</h1>
+          <form
+            className='flex flex-col gap-10 w-full'
+            onSubmit={handleSubmit((data) => {
+              mutate(data);
+            })}
+          >
+            <ul className='grid grid-cols-1 w-full gap-5 md:grid-cols-2 mt-4'>
+              <li className='flex flex-col'>
+                <label className='block text-sm font-medium'>First name:</label>
+                <input
+                  className='py-2 px-3 text-black mt-1 focus:ring-neutral-500 focus:border-neutral-500 sm:text-sm border-gray-300 bg-neutral-900/50 rounded-md'
+                  type='text'
+                  {...register('firstName', { required: true })}
+                  placeholder='Tim'
+                />
+                {errors.firstName && (
+                  <p className='py-2 text-xs text-red-400'>
+                    {errors.firstName.message}
+                  </p>
+                )}
+              </li>
+              <li className='flex flex-col'>
+                <label className='block text-sm font-medium'>Last name:</label>
+                <input
+                  className='py-2 px-3 text-black mt-1 focus:ring-neutral-500 focus:border-neutral-500 sm:text-sm border-gray-300 bg-neutral-900/50 rounded'
+                  type='text'
+                  {...register('lastName', { required: true })}
+                  placeholder='Apple'
+                />
+                {errors.lastName && (
+                  <p className='py-2 text-xs text-red-400'>
+                    {errors.lastName.message}
+                  </p>
+                )}
               </li>
 
-              <li className='flex items-end space-x-3'>
-                <div className='col-span-6 sm:col-span-3'>
-                  <label className='block text-sm font-medium'>
-                    Club name:
-                  </label>
-
-                  <input
-                    className='py-2 px-3 text-black mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md'
-                    // {...register('athlete.club.clubName')}
-                    // defaultValue='HIFK'
-                  />
-                </div>
+              <li className='flex flex-col'>
+                <label className='block text-sm font-medium'>Club name:</label>
+                <input
+                  className='py-2 px-3 text-black mt-1 focus:ring-neutral-500 focus:border-neutral-500 sm:text-sm border-gray-300 bg-neutral-900/50 rounded'
+                  type='text'
+                  {...register('club', { required: true })}
+                  placeholder='HIFK'
+                />
+                {errors.club && (
+                  <p className='py-2 text-xs text-red-400'>
+                    {errors.club.message}
+                  </p>
+                )}
               </li>
-              <li className='flex items-end space-x-3'>
-                <div className='col-span-6 sm:col-span-3'>
+              <li className='flex gap-5'>
+                <div className='flex flex-col w-1/3'>
                   <label className='block text-sm font-medium'>PB:</label>
-
                   <input
-                    className='py-2 px-3 text-black mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md'
-                    // {...register('athlete.PB')}
-                    // defaultValue='90.00m'
+                    className='py-2 px-3 focus:ring-neutral-500 focus:border-neutral-500 sm:text-sm border-gray-300 bg-neutral-900/50 rounded'
+                    type='number'
+                    // not a number but a string 4 some reason fix this
+                    {...register('pb', { required: false, value: 0 })}
+                    // placeholder='10.20'
                   />
                 </div>
-              </li>
 
-              <li className='flex items-end space-x-3'>
-                <div className='col-span-6 sm:col-span-3'>
+                <div className='flex flex-col w-1/3'>
                   <label className='block text-sm font-medium'>SB:</label>
-
                   <input
-                    className='py-2 px-3 text-black mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md'
-                    // {...register('athlete.SB')}
-                    // defaultValue='70.00m'
+                    className='py-2 px-3 focus:ring-neutral-500 focus:border-neutral-500 sm:text-sm border-gray-300 bg-neutral-900/50 rounded'
+                    type='number'
+                    // not a number but a string 4 some reason fix this
+                    {...register('sb', { required: false, value: 0 })}
+                    // placeholder='9.10'
                   />
                 </div>
+                {errors.pb && errors.sb && (
+                  <p className='py-2 text-xs text-red-400'>
+                    {errors.sb.message || errors.pb.message}
+                  </p>
+                )}
               </li>
             </ul>
-
-            <ul className='grid grid-cols-1 w-full gap-x-5 gap-y-3 md:grid-cols-2 mt-4'>
-              {/* <label className='block text-sm font-medium'>Attempts:</label> */}
-              {/* {fields.map((field, index) => (
-                <li className='flex items-end space-x-3' key={field.id}>
-                  <div className='col-span-6 sm:col-span-3'>
-                    <label className='block text-sm font-medium text-gray-300'>
-                      Attempt {index + 1}
-                    </label>
-                    <input
-                      placeholder='name'
-                      {...register(`attempts.${index}.line1`, {
-                        required: true,
-                      })}
-                      className='py-2 px-3 text-black mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md'
-                    />
-                  </div>
-                  <button onClick={() => remove(index)}>
-                    <svg
-                      xmlns='http://www.w3.org/2000/svg'
-                      className='h-6 w-6 text-gray-500'
-                      fill='none'
-                      viewBox='0 0 24 24'
-                      stroke='currentColor'
-                      strokeWidth={2}
-                    >
-                      <path
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'
-                      />
-                    </svg>
-                  </button>
-                </li>
-              ))} */}
-            </ul>
-
             <button
-              type='button'
-              value='Add more options'
-              className='inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium   my-3'
-              // onClick={() => append({ line1: 'Another attempt' })}
+              type='submit'
+              className='py-2 px-4 text-sm font-medium rounded bg-neutral-500 hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-500'
             >
-              Add attempt
+              Add Athlete
             </button>
-          </fieldset>
-
-          <input
-            type='submit'
-            // disabled={isLoading}
-            className='my-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
-            value='Create Result'
-          />
-        </form>
+          </form>
+        </div>
       </div>
     </Layout>
   );
-}
+};
+
+const Athlete: React.FC = () => {
+  return <AddAthleteForm />;
+};
+
+export default Athlete;

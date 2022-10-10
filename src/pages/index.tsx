@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import Link from 'next/link';
+import React, { useState } from 'react';
 import clsx from 'clsx';
 import {
   HiOutlineEye,
@@ -14,12 +13,37 @@ import Layout from '../components/layout';
 import { AutoAnimate } from '../components/auto-animate';
 import { Card } from '../components/card';
 import { trpc } from '../utils/trpc';
+import * as portals from 'react-reverse-portal';
+import dynamic from 'next/dynamic';
+
+const Added = dynamic(() => Promise.resolve(AddAttempt), { ssr: false });
+const Audi = dynamic(() => Promise.resolve(Outey), { ssr: false });
 
 export default function Home() {
+  const isSSR = typeof window === 'undefined';
+
+  const portalNode = React.useMemo(() => {
+    if (isSSR) {
+      return null;
+    }
+    return portals.createHtmlPortalNode();
+  }, []);
   const [reverseSort, setReverseSort] = useState(false);
   const [show, setShow] = useState(false);
   const [but, setBut] = useState(false);
+  const [modal, setModal] = useState(false);
+  const toggle = React.useCallback(() => {
+    setModal((modal) => !modal);
+  }, []);
   const { data, isLoading, refetch } = trpc.result.getAllAttempts.useQuery();
+  const athletes = trpc.result.getAllAthletes.useQuery();
+
+  const allAthletes =
+    data?.filter((ath) => ath.athlete.filter((a) => a.id)) || [];
+
+  console.log('attempts', data);
+  console.log('athlete', athletes.data);
+
   return (
     <Layout title='Tablo'>
       <div className='grid min-h-0 flex-1 grid-cols-7'>
@@ -27,9 +51,6 @@ export default function Home() {
           <div className='flex items-center justify-between'>
             <h2 className='flex items-center gap-1.5 font-medium'>
               <span>Timetable</span>
-              {/* <span className='inline-flex h-6 w-6 items-center justify-center rounded-full bg-neutral-800 text-xs font-extrabold'>
-                {otherQuestions.length}2
-              </span> */}
             </h2>
           </div>
 
@@ -38,22 +59,21 @@ export default function Home() {
               <div className='break-words'>Men&apos;s hammer throw 14.00</div>
               <div className='break-words'>Women&apos;s hammer throw 16.00</div>
               <div className='flex items-center justify-between text-gray-300'>
-                {/* <div className="text-sm">{dayjs(q.createdAt).fromNow()}</div> */}
-                <div className='text-sm'>1 days ago</div>
+                <button onClick={() => setBut(!but)}>
+                  <span className='flex items-center gap-1.5 text-sm'>
+                    {!but ? (
+                      <HiOutlineEye className='text-xl' />
+                    ) : (
+                      <HiOutlineEyeOff className='text-xl' />
+                    )}
+                    Show athlete
+                  </span>
+                </button>
                 <button className='relative z-10 -my-1 -mx-2 flex items-center gap-1.5 rounded py-1 px-2 text-sm hover:bg-neutral-900/50 hover:text-white'>
                   <HiOutlineTrash className='text-xl' />
                   <span>Edit</span>
                 </button>
               </div>
-              <button
-                className='absolute w-full inset-0 z-0 flex items-center justify-center bg-neutral-900/75 opacity-0 transition-opacity hover:opacity-100'
-                // onClick={() => pinQuestion({ questionId: q.id })}
-              >
-                <span className='flex items-center gap-1.5'>
-                  <HiOutlineEye />
-                  Show athlete
-                </span>
-              </button>
             </Card>
           </AutoAnimate>
         </div>
@@ -173,7 +193,8 @@ export default function Home() {
             <h2 className='flex items-center gap-1.5 font-medium'>
               <span>Athletes</span>
               <span className='inline-flex h-6 w-6 items-center justify-center rounded-full bg-neutral-800 text-xs font-extrabold'>
-                {/* {otherQuestions.length} */}4
+                {athletes.data?.length}
+                {/* 4 */}
               </span>
             </h2>
             <button
@@ -190,140 +211,104 @@ export default function Home() {
             </button>
           </div>
           <AutoAnimate
-            // className='flex gap-4 flex-col'
             className={clsx(
               'flex gap-4',
               reverseSort ? 'flex-col-reverse' : 'flex-col'
             )}
           >
-            {/* {otherQuestions.map((q) => ( */}
-            <Card
-              // key={q.id}
-              className='relative flex animate-fade-in-down flex-col gap-4 p-4'
-            >
-              <div className='break-words'>Henri Liipola</div>
-              <div className='flex gap-2'>
-                <p className='bg-neutral-900/50 px-2 py-1 rounded'>14.20</p>
-                <p className='bg-neutral-900/50 px-2 py-1 rounded'>x</p>
-                <p className='bg-neutral-900/50 px-2 py-1 rounded'>-</p>
-                <p className='bg-neutral-900/50 px-2 py-1 rounded'>53.69</p>
-                <p className='bg-neutral-900/50 px-2 py-1 rounded'>64.20</p>
-                <p className='bg-neutral-900/50 px-2 py-1 rounded'>74.20</p>
-                <button
-                  className='relative z-10 -my-1 -mx-2 flex items-center gap-1.5 rounded py-1 px-2 text-sm hover:bg-neutral-900/50 hover:text-white'
-                  // onClick={() => removeQuestion({ questionId: q.id })}
-                >
-                  {/* Show only when less then 6 attempts added */}
-                  <HiOutlinePlus className='text-xl' />
-                  <span>Add</span>
-                </button>
-              </div>
-              <div className='flex items-center justify-between text-gray-300'>
-                {/* <div className="text-sm">{dayjs(q.createdAt).fromNow()}</div> */}
-                <div className='text-sm'>1 days ago</div>
-
-                <button
-                  className='relative z-10 -my-1 -mx-2 flex items-center gap-1.5 rounded py-1 px-2 text-sm hover:bg-neutral-900/50 hover:text-white'
-                  // onClick={() => removeQuestion({ questionId: q.id })}
-                >
-                  <HiOutlineTrash className='text-xl' />
-                  <span>Remove</span>
-                </button>
-              </div>
-              {/* <button
-                className='absolute w-full inset-0 z-0 flex items-center justify-center bg-neutral-900/75 opacity-0 transition-opacity hover:opacity-100'
-                // onClick={() => pinQuestion({ questionId: q.id })}
-              > */}
-              <button
-                // className='absolute top-4 right-5 z-0'
-                // onClick={() => pinQuestion({ questionId: q.id })}
-                onClick={() => setBut(!but)}
+            {data?.map((q) => (
+              <Card
+                key={q.id}
+                className='relative flex animate-fade-in-down flex-col gap-4 p-4'
               >
-                <span className='flex items-center gap-1.5 text-sm'>
-                  {!but ? (
-                    <HiOutlineEye className='text-xl' />
-                  ) : (
-                    <HiOutlineEyeOff className='text-xl' />
+                {q.athlete.map((ath) => (
+                  <div key={ath.id} className='break-words'>
+                    {ath.athleteName}
+                  </div>
+                ))}
+                <div className='flex gap-2'>
+                  {q.attempts.map((at) => (
+                    <p
+                      key={at.id}
+                      className='bg-neutral-900/50 px-2 py-1 rounded'
+                    >
+                      {at.attempt1}
+                    </p>
+                  ))}
+                  {q.attempts.length < 6 && (
+                    <>
+                      <button
+                        className='relative px-2 py-1 flex items-center gap-1.5 rounde text-sm hover:bg-neutral-900/50 hover:text-white'
+                        onClick={toggle}
+                      >
+                        <HiOutlinePlus className='text-base' />
+                        <span>Add</span>
+                      </button>
+                    </>
                   )}
-                  Show athlete
-                </span>
-                {/* <span className='flex items-center gap-1.5'>
-                  <HiOutlineEye />          
-                Show athlete
-                </span> */}
-              </button>
-            </Card>
+                </div>
+                <div className='flex items-center justify-between text-gray-300'>
+                  {/* <div className="text-sm">{dayjs(q.createdAt).fromNow()}</div> */}
+                  <button onClick={() => setBut(!but)}>
+                    <span className='flex items-center gap-1.5 text-sm'>
+                      {!but ? (
+                        <HiOutlineEye className='text-xl' />
+                      ) : (
+                        <HiOutlineEyeOff className='text-xl' />
+                      )}
+                      Show athlete
+                    </span>
+                  </button>
 
-            {/* ))} */}
+                  <button
+                    className='relative z-10 -my-1 -mx-2 flex items-center gap-1.5 rounded py-1 px-2 text-sm hover:bg-neutral-900/50 hover:text-white'
+                    // onClick={() => removeQuestion({ questionId: q.id })}
+                  >
+                    <HiOutlineTrash className='text-xl' />
+                    <span>Remove</span>
+                  </button>
+                </div>
+              </Card>
+            ))}
           </AutoAnimate>
         </div>
       </div>
+      <Added portalNode={portalNode} />
+      {modal && <Audi portalNode={portalNode} />}
     </Layout>
   );
 }
 
-function AddAttempt() {
-  const AllAttempts = trpc.result.getAllAttempts.useQuery(undefined, {
-    staleTime: 3000,
-  });
-  const utils = trpc.useContext();
-  const addAttempt = trpc.result.addAttempt.useMutation({
-    async onMutate({ attempt1 }) {
-      await utils.result.getAllAttempts.cancel();
-      const all = AllAttempts.data ?? [];
-      utils.result.getAllAttempts.setData([
-        //   ...all,
-        // {
-        //     attempts: [
-        //       {attempt1}
-        //     ],
-        //   },
-      ]);
-    },
-  });
-  // const editAttempt = trpc.result.addAttempt.useMutation({
-  //   async onMutate({ id, data }) {
-  //     await utils.todo.all.cancel();
-  //     const allTasks = utils.todo.all.getData();
-  //     if (!allTasks) {
-  //       return;
-  //     }
-  //     utils.todo.all.setData(
-  //       allTasks.map((t) =>
-  //         t.id === id
-  //           ? {
-  //               ...t,
-  //               ...data,
-  //             }
-  //           : t,
-  //       ),
-  //     );
-  //   },
-  // });
+function AddAttempt({ portalNode }: { portalNode: any }) {
   return (
-    <div className='absolute z-50 bg-black/50 h-screen w-screen'>
-      <div className='max-w-xl mx-auto py-12 md:max-w-2xl'>
-        {/* <form onSubmit={handleSubmit(onSubmit)} className='w-full'> */}
-        <form className='w-full'>
-          {/* {isError && error.message} */}
+    <portals.InPortal node={portalNode}>
+      <div className='absolute top-0 right-0 left-0 bottom-0 z-50 flex justify-center items-center bg-black/50 h-screen w-screen'>
+        <div className='bg-neutral-800 p-5 rounded'>
+          <form className='flex flex-col gap-5'>
+            <div className='flex flex-col gap-2'>
+              <label className='font-normal'>Add attempt</label>
+              <input
+                className='py-2 px-3 mt-1 focus:ring-neutral-500 focus:border-neutral-500 sm:text-sm bg-neutral-900/50 rounded'
+                type='number'
+                step={0.01}
+                // {...register('attempt1',{require:true})}
+                placeholder='60.69'
+              />
+            </div>
 
-          <div className='col-span-6 sm:col-span-3'>
-            <label className='block text-sm font-medium'>Add Result</label>
-            <input
-              className='py-2 px-3 text-black mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md'
-              // {...register('athlete.athleteName')}
-              // defaultValue='marco'
-            />
-          </div>
-
-          <input
-            type='submit'
-            // disabled={isLoading}
-            className='my-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
-            value='Create Result'
-          />
-        </form>
+            <button
+              type='submit'
+              className='py-2 px-4 text-sm font-medium rounded bg-neutral-500 hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-500'
+            >
+              Add
+            </button>
+          </form>
+        </div>
       </div>
-    </div>
+    </portals.InPortal>
   );
+}
+
+function Outey({ portalNode }: { portalNode: any }) {
+  return <portals.OutPortal node={portalNode} />;
 }
