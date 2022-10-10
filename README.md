@@ -1,6 +1,6 @@
 # Tablo
 
-Hammer Throwing Leaderboard to Tour de Hammer Meets
+Leaderboard for streaming (Throwing events)
 
 ## Getting Started
 
