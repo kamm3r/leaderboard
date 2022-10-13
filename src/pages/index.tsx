@@ -15,6 +15,12 @@ import { Card } from '../components/card';
 import { trpc } from '../utils/trpc';
 import * as portals from 'react-reverse-portal';
 import dynamic from 'next/dynamic';
+import {
+  addAttemptInput,
+  AddAttemptInputType,
+} from '../shared/add-athlete-validator';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
 
 const Added = dynamic(() => Promise.resolve(AddAttempt), { ssr: false });
 const Audi = dynamic(() => Promise.resolve(Outey), { ssr: false });
@@ -27,7 +33,7 @@ export default function Home() {
       return null;
     }
     return portals.createHtmlPortalNode();
-  }, []);
+  }, [isSSR]);
   const [reverseSort, setReverseSort] = useState(false);
   const [show, setShow] = useState(false);
   const [but, setBut] = useState(false);
@@ -35,14 +41,11 @@ export default function Home() {
   const toggle = React.useCallback(() => {
     setModal((modal) => !modal);
   }, []);
-  const { data, isLoading, refetch } = trpc.result.getAllAttempts.useQuery();
-  const athletes = trpc.result.getAllAthletes.useQuery();
+  const { data, isLoading } = trpc.athletes.getAll.useQuery();
 
-  const allAthletes =
-    data?.filter((ath) => ath.athlete.filter((a) => a.id)) || [];
-
-  console.log('attempts', data);
-  console.log('athlete', athletes.data);
+  if (!data || isLoading) {
+    return <div>No Data YET!</div>;
+  }
 
   return (
     <Layout title='Tablo'>
@@ -192,17 +195,14 @@ export default function Home() {
           <div className='flex items-center justify-between'>
             <h2 className='flex items-center gap-1.5 font-medium'>
               <span>Athletes</span>
-              <span className='inline-flex h-6 w-6 items-center justify-center rounded-full bg-neutral-800 text-xs font-extrabold'>
-                {athletes.data?.length}
-                {/* 4 */}
+              <span className='flex h-6 w-6 justify-center items-center rounded-full bg-neutral-800 text-xs font-bold'>
+                {data?.length}
               </span>
             </h2>
             <button
               className='relative z-10 -my-2 flex items-center gap-1.5 rounded py-2 px-2 text-sm hover:bg-neutral-900/50 hover:text-white'
               onClick={() => setReverseSort(!reverseSort)}
             >
-              {/* {reverseSort ? <FaSortAmountUp /> : <FaSortAmountDown />} */}
-
               {reverseSort ? (
                 <HiSortDescending className='text-xl' />
               ) : (
@@ -216,18 +216,23 @@ export default function Home() {
               reverseSort ? 'flex-col-reverse' : 'flex-col'
             )}
           >
-            {data?.map((q) => (
+            {data?.map((ath) => (
               <Card
-                key={q.id}
+                key={ath.id}
                 className='relative flex animate-fade-in-down flex-col gap-4 p-4'
               >
-                {q.athlete.map((ath) => (
-                  <div key={ath.id} className='break-words'>
-                    {ath.athleteName}
-                  </div>
-                ))}
+                <div
+                  key={ath.id}
+                  className='break-words flex items-center gap-3'
+                >
+                  <p className=''>{ath.name}</p>
+                  <span className='text-xs opacity-70'>
+                    PB: {ath.PB} SB: {ath.SB}
+                  </span>
+                </div>
+
                 <div className='flex gap-2'>
-                  {q.attempts.map((at) => (
+                  {ath.attempts.map((at) => (
                     <p
                       key={at.id}
                       className='bg-neutral-900/50 px-2 py-1 rounded'
@@ -235,7 +240,7 @@ export default function Home() {
                       {at.attempt1}
                     </p>
                   ))}
-                  {q.attempts.length < 6 && (
+                  {ath.attempts.length < 6 && (
                     <>
                       <button
                         className='relative px-2 py-1 flex items-center gap-1.5 rounde text-sm hover:bg-neutral-900/50 hover:text-white'
@@ -270,6 +275,7 @@ export default function Home() {
                 </div>
               </Card>
             ))}
+            {/* </DraggableList> */}
           </AutoAnimate>
         </div>
       </div>
@@ -280,18 +286,34 @@ export default function Home() {
 }
 
 function AddAttempt({ portalNode }: { portalNode: any }) {
+  const { mutate } = trpc.athletes.addAttempt.useMutation({
+    onSuccess: (data) => {
+      console.log('submitted', data);
+
+      // router.push(`/`);
+    },
+  });
+  const {
+    handleSubmit,
+    register,
+    formState: { errors },
+  } = useForm<AddAttemptInputType>({
+    resolver: zodResolver(addAttemptInput),
+  });
   return (
     <portals.InPortal node={portalNode}>
       <div className='absolute top-0 right-0 left-0 bottom-0 z-50 flex justify-center items-center bg-black/50 h-screen w-screen'>
         <div className='bg-neutral-800 p-5 rounded'>
-          <form className='flex flex-col gap-5'>
+          <form
+            className='flex flex-col gap-5'
+            onSubmit={handleSubmit((data) => mutate(data))}
+          >
             <div className='flex flex-col gap-2'>
               <label className='font-normal'>Add attempt</label>
               <input
                 className='py-2 px-3 mt-1 focus:ring-neutral-500 focus:border-neutral-500 sm:text-sm bg-neutral-900/50 rounded'
-                type='number'
-                step={0.01}
-                // {...register('attempt1',{require:true})}
+                type='text'
+                {...register('attempt1')}
                 placeholder='60.69'
               />
             </div>

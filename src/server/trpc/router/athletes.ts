@@ -2,9 +2,9 @@ import { TRPCError } from '@trpc/server';
 import EventEmitter from 'events';
 import { z } from 'zod';
 import { t } from '../trpc';
-import { prisma } from '../db/client';
+import { prisma } from '../../db/client';
 import { observable } from '@trpc/server/observable';
-import { addAthleteInput } from '../../shared/add-athlete-validator';
+import { addAthleteInput } from '../../../shared/add-athlete-validator';
 
 type Result = {
   attempt: number;
@@ -12,11 +12,11 @@ type Result = {
 
 const ee = new EventEmitter();
 
-export const resultsRouter = t.router({
+export const athletesRouter = t.router({
   addAthlete: t.procedure.input(addAthleteInput).mutation(async ({ input }) => {
     const addAthlete = await prisma.athlete.create({
       data: {
-        athleteName: input.firstName + ' ' + input.lastName,
+        name: input.firstName + ' ' + input.lastName,
         club: input.club,
         PB: input.pb,
         SB: input.sb,
@@ -25,15 +25,9 @@ export const resultsRouter = t.router({
 
     return addAthlete;
   }),
-  getAllAthletes: t.procedure.query(async () => {
-    const athletes = await prisma.athlete.findMany({
-      include: { result: true },
-    });
-    return athletes;
-  }),
-  getAllAttempts: t.procedure.query(async () => {
-    const results = await prisma.result.findMany({
-      include: { athlete: true, attempts: true },
+  getAll: t.procedure.query(async () => {
+    const results = await prisma.athlete.findMany({
+      include: { attempts: true },
     });
     return results;
   }),
@@ -49,8 +43,8 @@ export const resultsRouter = t.router({
   addAttempt: t.procedure
     .input(
       z.object({
-        id: z.number().optional(),
         attempt1: z.string().min(1),
+        athleteID: z.string().cuid(),
       })
     )
     .mutation(async ({ input }) => {
@@ -77,11 +71,11 @@ export const resultsRouter = t.router({
   pin: t.procedure
     .input(
       z.object({
-        id: z.number(),
+        id: z.string().cuid(),
       })
     )
     .mutation(async ({ input }) => {
-      const edit = await prisma.result.findFirst({
+      const edit = await prisma.athlete.findFirst({
         where: { id: input.id },
       });
       if (!edit) {
@@ -95,11 +89,11 @@ export const resultsRouter = t.router({
   edit: t.procedure
     .input(
       z.object({
-        id: z.number(),
+        id: z.string().cuid(),
       })
     )
     .mutation(async ({ input }) => {
-      const edit = await prisma.result.findFirst({
+      const edit = await prisma.athlete.findFirst({
         where: { id: input.id },
       });
       if (!edit) {
@@ -113,7 +107,7 @@ export const resultsRouter = t.router({
   // achive: t.procedure
   //   .input(
   //     z.object({
-  //       id: z.number(),
+  //       id: z.string().cuid(),
   //     })
   //   )
   //   .mutation(async ({ input }) => {
@@ -129,4 +123,4 @@ export const resultsRouter = t.router({
   }),
 });
 
-export type resultsRouter = typeof resultsRouter;
+export type resultsRouter = typeof athletesRouter;

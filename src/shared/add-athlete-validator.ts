@@ -4,8 +4,14 @@ export const addAthleteInput = z.object({
   firstName: z.string(),
   lastName: z.string(),
   club: z.string(),
-  pb: z.number().optional(),
-  sb: z.number().optional(),
+  pb: z.string().optional(),
+  sb: z.string().optional(),
 });
 
 export type AddAthleteInputType = z.infer<typeof addAthleteInput>;
+
+export const addAttemptInput = z.object({
+  attempt1: z.string(),
+});
+
+export type AddAttemptInputType = z.infer<typeof addAttemptInput>;

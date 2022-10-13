@@ -14,7 +14,7 @@ pnpm dev
 
 - [] add nextauth so that multiple user can use it
 - [] athlete features
-  - [] add a athlete and it show up on the dashboard
+  - [x] add a athlete and it show up on the dashboard
   - [] remove a athlete
   - [] clear all athletes
   - [] filters

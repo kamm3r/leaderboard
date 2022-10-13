@@ -1,6 +1,6 @@
 import Layout from '../components/layout';
 import { useRouter } from 'next/router';
-import { useFieldArray, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { trpc } from '../utils/trpc';
 import {
@@ -11,7 +11,7 @@ import {
 const AddAthleteForm = () => {
   const router = useRouter();
 
-  const { mutate, isLoading, data } = trpc.result.addAthlete.useMutation({
+  const { mutate, isLoading, data } = trpc.athletes.addAthlete.useMutation({
     onSuccess: (data) => {
       console.log('submitted', data);
 
@@ -50,7 +50,7 @@ const AddAthleteForm = () => {
               <li className='flex flex-col'>
                 <label className='block text-sm font-medium'>First name:</label>
                 <input
-                  className='py-2 px-3 text-black mt-1 focus:ring-neutral-500 focus:border-neutral-500 sm:text-sm border-gray-300 bg-neutral-900/50 rounded-md'
+                  className='py-2 px-3 mt-1 focus:ring-neutral-500 focus:border-neutral-500 sm:text-sm border-gray-300 bg-neutral-900/50 rounded-md'
                   type='text'
                   {...register('firstName', { required: true })}
                   placeholder='Tim'
@@ -64,7 +64,7 @@ const AddAthleteForm = () => {
               <li className='flex flex-col'>
                 <label className='block text-sm font-medium'>Last name:</label>
                 <input
-                  className='py-2 px-3 text-black mt-1 focus:ring-neutral-500 focus:border-neutral-500 sm:text-sm border-gray-300 bg-neutral-900/50 rounded'
+                  className='py-2 px-3 mt-1 focus:ring-neutral-500 focus:border-neutral-500 sm:text-sm border-gray-300 bg-neutral-900/50 rounded'
                   type='text'
                   {...register('lastName', { required: true })}
                   placeholder='Apple'
@@ -79,7 +79,7 @@ const AddAthleteForm = () => {
               <li className='flex flex-col'>
                 <label className='block text-sm font-medium'>Club name:</label>
                 <input
-                  className='py-2 px-3 text-black mt-1 focus:ring-neutral-500 focus:border-neutral-500 sm:text-sm border-gray-300 bg-neutral-900/50 rounded'
+                  className='py-2 px-3 mt-1 focus:ring-neutral-500 focus:border-neutral-500 sm:text-sm border-gray-300 bg-neutral-900/50 rounded'
                   type='text'
                   {...register('club', { required: true })}
                   placeholder='HIFK'
@@ -95,10 +95,8 @@ const AddAthleteForm = () => {
                   <label className='block text-sm font-medium'>PB:</label>
                   <input
                     className='py-2 px-3 focus:ring-neutral-500 focus:border-neutral-500 sm:text-sm border-gray-300 bg-neutral-900/50 rounded'
-                    type='number'
-                    // not a number but a string 4 some reason fix this
-                    {...register('pb', { required: false, value: 0 })}
-                    // placeholder='10.20'
+                    {...register('pb', { required: false })}
+                    placeholder='10.20'
                   />
                 </div>
 
@@ -106,10 +104,8 @@ const AddAthleteForm = () => {
                   <label className='block text-sm font-medium'>SB:</label>
                   <input
                     className='py-2 px-3 focus:ring-neutral-500 focus:border-neutral-500 sm:text-sm border-gray-300 bg-neutral-900/50 rounded'
-                    type='number'
-                    // not a number but a string 4 some reason fix this
-                    {...register('sb', { required: false, value: 0 })}
-                    // placeholder='9.10'
+                    {...register('sb', { required: false })}
+                    placeholder='9.10'
                   />
                 </div>
                 {errors.pb && errors.sb && (
