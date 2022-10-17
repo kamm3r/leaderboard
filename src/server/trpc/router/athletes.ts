@@ -5,11 +5,13 @@ import { t } from '../trpc';
 import { prisma } from '../../db/client';
 import { observable } from '@trpc/server/observable';
 import { addAthleteInput } from '../../../shared/add-athlete-validator';
+import { Prisma } from '@prisma/client';
 
 type Result = {
-  attempt: number;
-};
+  attempt: number
+}
 
+const athleteValidator = Prisma.validator<Prisma.AttemptSelect>()
 const ee = new EventEmitter();
 
 export const athletesRouter = t.router({
@@ -43,13 +45,14 @@ export const athletesRouter = t.router({
   addAttempt: t.procedure
     .input(
       z.object({
-        attempt1: z.string().min(1),
-        athleteID: z.string().cuid(),
+        attempt1: z.string(),
+        athleteId: z.string(),
       })
     )
     .mutation(async ({ input }) => {
       const attempt = await prisma.attempt.create({
         data: { ...input },
+        select: { Athlete: true }
       });
       ee.emit('addResult', attempt);
       // const result = await prisma.result;

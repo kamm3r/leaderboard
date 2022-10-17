@@ -251,6 +251,11 @@ export default function Home() {
                       </button>
                     </>
                   )}
+                  <Added
+                    portalNode={portalNode}
+                    setModal={setModal}
+                    id={ath.id}
+                  />
                 </div>
                 <div className='flex items-center justify-between text-gray-300'>
                   {/* <div className="text-sm">{dayjs(q.createdAt).fromNow()}</div> */}
@@ -279,14 +284,23 @@ export default function Home() {
           </AutoAnimate>
         </div>
       </div>
-      <Added portalNode={portalNode} />
       {modal && <Audi portalNode={portalNode} />}
     </Layout>
   );
 }
 
-function AddAttempt({ portalNode }: { portalNode: any }) {
-  const { mutate } = trpc.athletes.addAttempt.useMutation({
+/* add better typing then just any L man for that
+ fix this real quick */
+function AddAttempt({
+  portalNode,
+  setModal,
+  id,
+}: {
+  portalNode: any;
+  setModal: any;
+  id: string;
+}) {
+  const { mutate, data } = trpc.athletes.addAttempt.useMutation({
     onSuccess: (data) => {
       console.log('submitted', data);
 
@@ -300,10 +314,19 @@ function AddAttempt({ portalNode }: { portalNode: any }) {
   } = useForm<AddAttemptInputType>({
     resolver: zodResolver(addAttemptInput),
   });
+
+  console.log('data attempt', data);
+
   return (
     <portals.InPortal node={portalNode}>
       <div className='absolute top-0 right-0 left-0 bottom-0 z-50 flex justify-center items-center bg-black/50 h-screen w-screen'>
-        <div className='bg-neutral-800 p-5 rounded'>
+        <div className='bg-neutral-800 p-5 rounded relative'>
+          <button
+            className='absolute top-0 right-3'
+            onClick={() => setModal(false)}
+          >
+            L + Ratio
+          </button>
           <form
             className='flex flex-col gap-5'
             onSubmit={handleSubmit((data) => mutate(data))}
@@ -316,8 +339,25 @@ function AddAttempt({ portalNode }: { portalNode: any }) {
                 {...register('attempt1')}
                 placeholder='60.69'
               />
+              {errors.attempt1 && (
+                <p className='py-2 text-xs text-red-400'>
+                  {errors.attempt1.message}
+                </p>
+              )}
             </div>
-
+            <div className='flex flex-col gap-2'>
+              <label className='font-normal'>Athlete ID</label>
+              <input
+                className='py-2 px-3 mt-1 focus:ring-neutral-500 focus:border-neutral-500 sm:text-sm bg-neutral-900/50 rounded'
+                type='text'
+                {...register('athleteId', { value: id })}
+              />
+              {/* {errors.attempt1 && (
+                <p className='py-2 text-xs text-red-400'>
+                  {errors.attempt1.message}
+                </p>
+              )} */}
+            </div>
             <button
               type='submit'
               className='py-2 px-4 text-sm font-medium rounded bg-neutral-500 hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-500'
