@@ -5,9 +5,12 @@ Leaderboard for streaming (Throwing events)
 ## Getting Started
 
 ```bash
+# npm
+npm install
+npm run dev
+# pnpm
 pnpm install
 pnpm dev
-
 ```
 
 # Todo
@@ -18,15 +21,15 @@ pnpm dev
   - [] remove a athlete
   - [] clear all athletes
   - [] filters
-  - [] re-order athletes with use gesture
+  - [] re-order athletes with use gesture??
 - [] Attempt features
-  - [] add a attempt
+  - [x] add a attempt
   - [] adding a attempt status indicator
   - [] double-click to edit a attempt
 - [] timetable features
-  - [] add schedule time/names
+  - [] add scheduled times
   - [] edit timetable
-- [] english and finnish language options
+- [] add another language options
 - [] able to change meet status final or whatever
 - [] able to change meet name
 - [] tabs for men's and women's meets??

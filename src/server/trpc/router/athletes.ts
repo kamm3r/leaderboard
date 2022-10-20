@@ -5,14 +5,15 @@ import { t } from '../trpc';
 import { prisma } from '../../db/client';
 import { observable } from '@trpc/server/observable';
 import { addAthleteInput } from '../../../shared/add-athlete-validator';
-import { Prisma } from '@prisma/client';
 
 type Result = {
   attempt: number
 }
 
-const athleteValidator = Prisma.validator<Prisma.AttemptSelect>()
 const ee = new EventEmitter();
+
+const currentlyTyping: Record<string, { lastTyped: Date }> =
+  Object.create(null);
 
 export const athletesRouter = t.router({
   addAthlete: t.procedure.input(addAthleteInput).mutation(async ({ input }) => {
@@ -50,27 +51,29 @@ export const athletesRouter = t.router({
       })
     )
     .mutation(async ({ input }) => {
+      const name = 'dude'
       const attempt = await prisma.attempt.create({
         data: { ...input },
         select: { Athlete: true }
       });
       ee.emit('addResult', attempt);
-      // const result = await prisma.result;
+      delete currentlyTyping[name]
+      ee.emit('isTypingUpdate')
       return attempt;
     }),
-  // isTyping: t.procedure
-  //   .input(z.object({ typing: z.boolean() }))
-  //   .mutation(({ input, ctx }) => {
-  //     const name = 'dude';
-  //     if (!input.typing) {
-  //       delete currentlyTyping[name];
-  //     } else {
-  //       currentlyTyping[name] = {
-  //         lastTyped: new Date(),
-  //       };
-  //     }
-  //     ee.emit('isTypingUpdate');
-  //   }),
+  isTyping: t.procedure
+    .input(z.object({ typing: z.boolean() }))
+    .mutation(({ input }) => {
+      const name = 'dude';
+      if (!input.typing) {
+        delete currentlyTyping[name];
+      } else {
+        currentlyTyping[name] = {
+          lastTyped: new Date(),
+        };
+      }
+      ee.emit('isTypingUpdate');
+    }),
   pin: t.procedure
     .input(
       z.object({

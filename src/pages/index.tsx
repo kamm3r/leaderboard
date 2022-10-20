@@ -252,7 +252,7 @@ export default function Home() {
                     </>
                   )}
                   <Added
-                    portalNode={portalNode}
+                    portalNode={portalNode!}
                     setModal={setModal}
                     id={ath.id}
                   />
@@ -296,14 +296,14 @@ function AddAttempt({
   setModal,
   id,
 }: {
-  portalNode: any;
-  setModal: any;
+  portalNode: portals.HtmlPortalNode;
+  setModal: React.Dispatch<React.SetStateAction<boolean>>;
   id: string;
 }) {
   const { mutate, data } = trpc.athletes.addAttempt.useMutation({
     onSuccess: (data) => {
       console.log('submitted', data);
-
+      setModal(false);
       // router.push(`/`);
     },
   });
@@ -322,7 +322,7 @@ function AddAttempt({
       <div className='absolute top-0 right-0 left-0 bottom-0 z-50 flex justify-center items-center bg-black/50 h-screen w-screen'>
         <div className='bg-neutral-800 p-5 rounded relative'>
           <button
-            className='absolute top-0 right-3'
+            className='absolute top-5 right-5'
             onClick={() => setModal(false)}
           >
             L + Ratio
