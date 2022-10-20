@@ -9,17 +9,17 @@ concurrency:
 jobs:
   build:
     name: Lint and Typecheck
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        node_version: [16]
+        version: [16, 18, 19]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Use Node.js ${{matrix.node_version}}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
-          node_version: ${{matrix.node_version}}
+          node-version: ${{matrix.version}}
 
       - name: install npm dependencies
         run: |
