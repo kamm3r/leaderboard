@@ -25,9 +25,9 @@ jobs:
         run: |
           npm install
 
-      # - name: run typecheck
-      #   run: |
-      #     npm run typecheck
+      - name: run typecheck
+        run: |
+          npm run typecheck
 
       - name: run lint
         run: |
