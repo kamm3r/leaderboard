@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Layout from '../components/layout';
 
-export default function Error() {
+export default function NotFound() {
   return (
     <Layout title='Page Not Found'>
       <div className='flex flex-col justify-center items-start max-w-2xl mx-auto mb-16'>
@@ -14,10 +14,11 @@ export default function Error() {
           something wrong. I&#39;m guessing you spelled something wrong. Can you
           double check that URL?
         </p>
-        <Link href='/'>
-          <a className='p-1 sm:p-4 w-64 font-bold mx-auto bg-slate-200 text-center rounded-md text-black'>
-            Return Home
-          </a>
+        <Link
+          href='/'
+          className='p-1 sm:p-4 w-64 font-bold mx-auto bg-slate-200 text-center rounded-md text-black'
+        >
+          Return Home
         </Link>
       </div>
     </Layout>

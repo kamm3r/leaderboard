@@ -1,7 +1,7 @@
 import { TRPCError } from '@trpc/server';
 import EventEmitter from 'events';
 import { z } from 'zod';
-import { t } from '../trpc';
+import { router, publicProcedure, protectedProcedure } from '../trpc';
 import { prisma } from '../../db/client';
 import { observable } from '@trpc/server/observable';
 import { addAthleteInput } from '../../../shared/add-athlete-validator';
@@ -15,8 +15,8 @@ const ee = new EventEmitter();
 const currentlyTyping: Record<string, { lastTyped: Date }> =
   Object.create(null);
 
-export const athletesRouter = t.router({
-  addAthlete: t.procedure.input(addAthleteInput).mutation(async ({ input }) => {
+export const athletesRouter = router({
+  addAthlete: publicProcedure.input(addAthleteInput).mutation(async ({ input }) => {
     const addAthlete = await prisma.athlete.create({
       data: {
         name: input.firstName + ' ' + input.lastName,
@@ -28,13 +28,13 @@ export const athletesRouter = t.router({
 
     return addAthlete;
   }),
-  getAll: t.procedure.query(async () => {
+  getAll: publicProcedure.query(async () => {
     const results = await prisma.athlete.findMany({
       include: { attempts: true },
     });
     return results;
   }),
-  onAddAttempt: t.procedure.subscription(() => {
+  onAddAttempt: publicProcedure.subscription(() => {
     return observable<Result>((emit) => {
       const onAdd = (data: Result) => emit.next(data);
       ee.on('addAttempt', onAdd);
@@ -43,11 +43,11 @@ export const athletesRouter = t.router({
       };
     });
   }),
-  addAttempt: t.procedure
+  addAttempt: publicProcedure
     .input(
       z.object({
         attempt1: z.string(),
-        athleteId: z.string(),
+        athleteId: z.string().cuid(),
       })
     )
     .mutation(async ({ input }) => {
@@ -61,7 +61,7 @@ export const athletesRouter = t.router({
       ee.emit('isTypingUpdate')
       return attempt;
     }),
-  isTyping: t.procedure
+  isTyping: publicProcedure
     .input(z.object({ typing: z.boolean() }))
     .mutation(({ input }) => {
       const name = 'dude';
@@ -74,7 +74,7 @@ export const athletesRouter = t.router({
       }
       ee.emit('isTypingUpdate');
     }),
-  pin: t.procedure
+  pin: publicProcedure
     .input(
       z.object({
         id: z.string().cuid(),
@@ -92,7 +92,7 @@ export const athletesRouter = t.router({
       }
       return edit;
     }),
-  edit: t.procedure
+  edit: publicProcedure
     .input(
       z.object({
         id: z.string().cuid(),
@@ -110,7 +110,7 @@ export const athletesRouter = t.router({
       }
       return edit;
     }),
-  // achive: t.procedure
+  // achive: publicProcedure
   //   .input(
   //     z.object({
   //       id: z.string().cuid(),
@@ -124,7 +124,7 @@ export const athletesRouter = t.router({
   //       },
   //     });
   //   }),
-  unpin: t.procedure.mutation(async () => {
+  unpin: publicProcedure.mutation(async () => {
     return 'unpin';
   }),
 });

@@ -1,8 +1,8 @@
 // src/server/router/index.ts
-import { t } from '../trpc';
+import { router } from '../trpc';
 import { athletesRouter } from './athletes';
 
-export const appRouter = t.router({
+export const appRouter = router({
   athletes: athletesRouter,
 });
 
