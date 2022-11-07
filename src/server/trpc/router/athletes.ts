@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { router, publicProcedure, protectedProcedure } from '../trpc';
 import { prisma } from '../../db/client';
 import { observable } from '@trpc/server/observable';
-import { addAthleteInput } from '../../../shared/add-athlete-validator';
+import { addAthleteInput, addAttemptInput } from '../../../shared/add-athlete-validator';
 
 type Result = {
   attempt: number
@@ -34,6 +34,14 @@ export const athletesRouter = router({
     });
     return results;
   }),
+  getAthlete: publicProcedure.input(z.object({
+    id: z.string().cuid(),
+  })).query(async ({ input }) => {
+    const results = await prisma.athlete.findUnique({
+      where: { id: input.id }
+    });
+    return results;
+  }),
   onAddAttempt: publicProcedure.subscription(() => {
     return observable<Result>((emit) => {
       const onAdd = (data: Result) => emit.next(data);
@@ -44,17 +52,12 @@ export const athletesRouter = router({
     });
   }),
   addAttempt: publicProcedure
-    .input(
-      z.object({
-        attempt1: z.string(),
-        athleteId: z.string().cuid(),
-      })
-    )
+    .input(addAttemptInput)
     .mutation(async ({ input }) => {
       const name = 'dude'
       const attempt = await prisma.attempt.create({
         data: { ...input },
-        select: { Athlete: true }
+        select: { athleteId: true }
       });
       ee.emit('addResult', attempt);
       delete currentlyTyping[name]
@@ -92,7 +95,7 @@ export const athletesRouter = router({
       }
       return edit;
     }),
-  edit: publicProcedure
+  edit: protectedProcedure
     .input(
       z.object({
         id: z.string().cuid(),

@@ -21,10 +21,11 @@ import {
 } from "../shared/add-athlete-validator";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import useEventCallback from "../utils/event";
+import Button from "../components/button";
+import { TextInput } from "../components/input";
 
-const Added = dynamic(() => Promise.resolve(AddAttempt), { ssr: false });
-const Audi = dynamic(() => Promise.resolve(Outey), { ssr: false });
+// const Added = dynamic(() => Promise.resolve(AddAttempt), { ssr: false });
+// const Audi = dynamic(() => Promise.resolve(Outey), { ssr: false });
 
 export default function Page() {
   const isSSR = typeof window === "undefined";
@@ -39,15 +40,21 @@ export default function Page() {
   const [show, setShow] = useState(false);
   const [but, setBut] = useState(false);
   const [modal, setModal] = useState(false);
-  const toggle = React.useCallback(() => {
+  const [id, setId] = useState<string>();
+  // const toggle = (id: string) => {
+  //   setModal((modal) => !modal);
+  //   setId(id);
+  // };
+  const toggle = React.useCallback((id: string) => {
     setModal((modal) => !modal);
+    setId(id);
   }, []);
-  const { data, isLoading, refetch } = trpc.athletes.getAll.useQuery();
-  // useEventCallback(() => refetch());
+  const { data, isLoading } = trpc.athletes.getAll.useQuery();
 
   if (!data || isLoading) {
     return <div>No Data YET!</div>;
   }
+  console.log("set id", id);
 
   return (
     <Layout title="Tablo">
@@ -79,6 +86,84 @@ export default function Page() {
                   <span>Edit</span>
                 </button>
               </div>
+            </Card>
+            <Card className="animate-fade-in-down relative flex flex-col gap-4 p-4">
+              <Button
+                onClick={() => setBut(!but)}
+                // disabled={but === true}
+                // loading={but === true}
+                size="lg"
+                variant="primary"
+              >
+                Submit
+              </Button>
+              <Button
+                onClick={() => setBut(!but)}
+                // disabled={but === true}
+                // loading={but === true}
+                size="lg"
+                variant="secondary"
+              >
+                Submit
+              </Button>
+              <Button
+                onClick={() => setBut(!but)}
+                // disabled={but === true}
+                // loading={but === true}
+                size="lg"
+                variant="ghost"
+              >
+                Submit
+              </Button>
+              <Button
+                onClick={() => setBut(!but)}
+                // disabled={but === true}
+                // loading={but === true}
+                size="lg"
+                variant="danger"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => setBut(!but)}
+                // disabled={but === true}
+                // loading={but === true}
+                size="lg"
+                variant="text"
+              >
+                <div className="flex items-center gap-2">
+                  <HiOutlinePlus />
+                  Add
+                </div>
+              </Button>
+            </Card>
+            <Card className="animate-fade-in-down relative flex flex-col gap-4 p-4">
+              <Button
+                onClick={() => setBut(!but)}
+                // disabled={but === true}
+                // loading={but === true}
+                size="lg"
+                variant="primary-inverted"
+              >
+                Submit
+              </Button>
+              <Button
+                onClick={() => setBut(!but)}
+                // disabled={but === true}
+                // loading={but === true}
+                size="lg"
+                variant="secondary-inverted"
+              >
+                Submit
+              </Button>
+              <TextInput
+                placeholder="Type something..."
+                className="w-full"
+                type="text"
+                prefixEl="dude"
+                suffixEl="dude"
+                maxLength={400}
+              />
             </Card>
           </AutoAnimate>
         </div>
@@ -245,17 +330,12 @@ export default function Page() {
                   {ath.attempts.length < 6 && (
                     <button
                       className="relative -my-1 flex items-center gap-1.5 rounded px-2 py-1 text-sm hover:bg-neutral-900/50 hover:text-white"
-                      onClick={toggle}
+                      onClick={() => toggle(ath.id)}
                     >
                       <HiOutlinePlus className="text-base" />
                       <span>Add</span>
                     </button>
                   )}
-                  <Added
-                    portalNode={portalNode}
-                    setModal={setModal}
-                    id={ath.id}
-                  />
                 </div>
                 <div className="flex items-center justify-between text-gray-300">
                   <button
@@ -279,8 +359,9 @@ export default function Page() {
             ))}
           </AutoAnimate>
         </div>
-        {modal && <Audi portalNode={portalNode} />}
       </div>
+      <AddAttempt portalNode={portalNode} setModal={setModal} id={id} />
+      {modal && <Outey portalNode={portalNode} />}
     </Layout>
   );
 }
@@ -294,9 +375,9 @@ function AddAttempt({
 }: {
   portalNode: any;
   setModal: React.Dispatch<React.SetStateAction<boolean>>;
-  id: string;
+  id?: string;
 }) {
-  const { mutate } = trpc.athletes.addAttempt.useMutation({
+  const { mutate, isLoading } = trpc.athletes.addAttempt.useMutation({
     onSuccess: (data) => {
       console.log("submitted", data);
       setModal(false);
@@ -310,11 +391,8 @@ function AddAttempt({
     resolver: zodResolver(addAttemptInput),
   });
 
-  // if (data?.Athlete?.id === id) {
-  //   console.log(true);
-  // } else {
-  //   console.log(false);
-  // }
+  console.log("attempt id", id);
+  const athleteId = id;
   return (
     <portals.InPortal node={portalNode}>
       <div
@@ -330,7 +408,13 @@ function AddAttempt({
           </button>
           <form
             className="flex flex-col gap-5"
-            onSubmit={handleSubmit((data) => mutate(data))}
+            onSubmit={handleSubmit((data) => {
+              console.log("submit", data);
+              mutate({
+                athleteId,
+                attempt1: data.attempt1,
+              });
+            })}
           >
             <div className="flex flex-col gap-2">
               <label className="font-normal">Add attempt</label>
@@ -346,22 +430,33 @@ function AddAttempt({
                 </p>
               )}
             </div>
-            <div className="flex flex-col gap-2">
+            {/* <p>{id}</p> */}
+            {/* <div className="flex flex-col gap-2">
+
               <label className="font-normal">Athlete ID</label>
               <input
                 // disabled
                 className="mt-1 rounded bg-neutral-900/50 py-2 px-3 focus:border-neutral-500 focus:ring-neutral-500 disabled:opacity-50 sm:text-sm"
                 type="text"
-                {...register("athleteId", { value: id })}
-                // defaultValue={id}
+                {...register("athleteId")}
+                defaultValue={athleteID}
               />
-            </div>
-            <button
+            </div> */}
+            {/* <button
               type="submit"
               className="rounded bg-neutral-500 py-2 px-4 text-sm font-medium hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
             >
               Add
-            </button>
+            </button> */}
+            <Button
+              type="submit"
+              disabled={isLoading}
+              loading={isLoading}
+              size="lg"
+              variant="primary"
+            >
+              Add
+            </Button>
           </form>
         </div>
       </div>
