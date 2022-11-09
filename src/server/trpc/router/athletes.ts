@@ -113,23 +113,41 @@ export const athletesRouter = router({
       }
       return edit;
     }),
-  // achive: publicProcedure
-  //   .input(
-  //     z.object({
-  //       id: z.string().cuid(),
-  //     })
-  //   )
-  //   .mutation(async ({ input }) => {
-  //     const edit = await prisma.result.updateMany({
-  //       where: { id: input.id },
-  //       data: {
-  //         status: 'COMPLETED',
-  //       },
-  //     });
-  //   }),
-  unpin: publicProcedure.mutation(async () => {
-    return 'unpin';
-  }),
+  delete: publicProcedure
+    .input(
+      z.object({
+        id: z.string().cuid(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const removeAttempts = prisma.attempt.deleteMany({
+        where: { athleteId: input.id }
+      })
+      const removeAthlete = prisma.athlete.delete({
+        where: { id: input.id },
+      })
+      const remove = await prisma.$transaction([removeAttempts, removeAthlete])
+      if (!remove) {
+        throw new TRPCError({
+          message: 'NOT YOUR ATTEMPT',
+          code: 'UNAUTHORIZED',
+        });
+      }
+      return remove
+    }),
+  deleteAll: publicProcedure
+    .mutation(async () => {
+      const removeAttempts = prisma.attempt.deleteMany()
+      const removeAthletes = prisma.athlete.deleteMany()
+      const remove = await prisma.$transaction([removeAttempts, removeAthletes])
+      if (!remove) {
+        throw new TRPCError({
+          message: 'NOT YOUR ATTEMPT',
+          code: 'UNAUTHORIZED',
+        });
+      }
+      return remove
+    }),
 });
 
 export type resultsRouter = typeof athletesRouter;

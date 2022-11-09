@@ -14,7 +14,6 @@ import { AutoAnimate } from "../components/auto-animate";
 import { Card } from "../components/card";
 import { trpc } from "../utils/trpc";
 import * as portals from "react-reverse-portal";
-import dynamic from "next/dynamic";
 import {
   addAttemptInput,
   type AddAttemptInputType,
@@ -23,9 +22,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import Button from "../components/button";
 import { TextInput } from "../components/input";
-
-// const Added = dynamic(() => Promise.resolve(AddAttempt), { ssr: false });
-// const Audi = dynamic(() => Promise.resolve(Outey), { ssr: false });
 
 export default function Page() {
   const isSSR = typeof window === "undefined";
@@ -50,6 +46,11 @@ export default function Page() {
     setId(id);
   }, []);
   const { data, isLoading } = trpc.athletes.getAll.useQuery();
+  const deleted = trpc.athletes.delete.useMutation({
+    onSuccess: (data) => {
+      console.log("deleted an athlete", data);
+    },
+  });
 
   if (!data || isLoading) {
     return <div>No Data YET!</div>;
@@ -350,7 +351,10 @@ export default function Page() {
                     <span>Show athlete</span>
                   </button>
 
-                  <button className="relative z-10 -my-1 -mx-2 flex items-center gap-1.5 rounded py-1 px-2 text-sm hover:bg-neutral-900/50 hover:text-white">
+                  <button
+                    className="relative z-10 -my-1 -mx-2 flex items-center gap-1.5 rounded py-1 px-2 text-sm hover:bg-neutral-900/50 hover:text-white"
+                    onClick={() => deleted.mutate({ id: ath.id })}
+                  >
                     <HiOutlineTrash className="text-xl" />
                     <span>Remove</span>
                   </button>
@@ -360,8 +364,10 @@ export default function Page() {
           </AutoAnimate>
         </div>
       </div>
-      <AddAttempt portalNode={portalNode} setModal={setModal} id={id} />
-      {modal && <Outey portalNode={portalNode} />}
+      <portals.InPortal node={portalNode!}>
+        <AddAttempt setModal={setModal} athleteId={id} />
+      </portals.InPortal>
+      {modal && <portals.OutPortal node={portalNode!} />}
     </Layout>
   );
 }
@@ -369,13 +375,11 @@ export default function Page() {
 /* add better typing then just any L man for that
  fix this real quick */
 function AddAttempt({
-  portalNode,
   setModal,
-  id,
+  athleteId,
 }: {
-  portalNode: any;
   setModal: React.Dispatch<React.SetStateAction<boolean>>;
-  id?: string;
+  athleteId?: string;
 }) {
   const { mutate, isLoading } = trpc.athletes.addAttempt.useMutation({
     onSuccess: (data) => {
@@ -391,47 +395,44 @@ function AddAttempt({
     resolver: zodResolver(addAttemptInput),
   });
 
-  console.log("attempt id", id);
-  const athleteId = id;
   return (
-    <portals.InPortal node={portalNode}>
-      <div
-        className="absolute top-0 right-0 left-0 bottom-0 z-50 flex h-screen w-screen items-center justify-center bg-black/50"
-        // onClick={() => setModal(false)}
-      >
-        <div className="relative rounded bg-neutral-800 p-5">
-          <button
-            className="absolute top-5 right-5"
-            onClick={() => setModal(false)}
-          >
-            L + Ratio
-          </button>
-          <form
-            className="flex flex-col gap-5"
-            onSubmit={handleSubmit((data) => {
-              console.log("submit", data);
-              mutate({
-                athleteId,
-                attempt1: data.attempt1,
-              });
-            })}
-          >
-            <div className="flex flex-col gap-2">
-              <label className="font-normal">Add attempt</label>
-              <input
-                className="mt-1 rounded bg-neutral-900/50 py-2 px-3 focus:border-neutral-500 focus:ring-neutral-500 sm:text-sm"
-                type="text"
-                {...register("attempt1")}
-                placeholder="60.69"
-              />
-              {errors.attempt1 && (
-                <p className="py-2 text-xs text-red-400">
-                  {errors.attempt1.message}
-                </p>
-              )}
-            </div>
-            {/* <p>{id}</p> */}
-            {/* <div className="flex flex-col gap-2">
+    <div
+      className="absolute top-0 right-0 left-0 bottom-0 z-50 flex h-screen w-screen items-center justify-center bg-black/50"
+      // onClick={() => setModal(false)}
+    >
+      <div className="relative rounded bg-neutral-800 p-5">
+        <button
+          className="absolute top-5 right-5"
+          onClick={() => setModal(false)}
+        >
+          L + Ratio
+        </button>
+        <form
+          className="flex flex-col gap-5"
+          onSubmit={handleSubmit((data) => {
+            console.log("submit", data);
+            mutate({
+              athleteId,
+              attempt1: data.attempt1,
+            });
+          })}
+        >
+          <div className="flex flex-col gap-2">
+            <label className="font-normal">Add attempt</label>
+            <input
+              className="mt-1 rounded bg-neutral-900/50 py-2 px-3 focus:border-neutral-500 focus:ring-neutral-500 sm:text-sm"
+              type="text"
+              {...register("attempt1")}
+              placeholder="60.69"
+            />
+            {errors.attempt1 && (
+              <p className="py-2 text-xs text-red-400">
+                {errors.attempt1.message}
+              </p>
+            )}
+          </div>
+          {/* <p>{id}</p> */}
+          {/* <div className="flex flex-col gap-2">
 
               <label className="font-normal">Athlete ID</label>
               <input
@@ -442,28 +443,23 @@ function AddAttempt({
                 defaultValue={athleteID}
               />
             </div> */}
-            {/* <button
+          {/* <button
               type="submit"
               className="rounded bg-neutral-500 py-2 px-4 text-sm font-medium hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
             >
               Add
             </button> */}
-            <Button
-              type="submit"
-              disabled={isLoading}
-              loading={isLoading}
-              size="lg"
-              variant="primary"
-            >
-              Add
-            </Button>
-          </form>
-        </div>
+          <Button
+            type="submit"
+            disabled={isLoading}
+            loading={isLoading}
+            size="lg"
+            variant="primary"
+          >
+            Add
+          </Button>
+        </form>
       </div>
-    </portals.InPortal>
+    </div>
   );
-}
-
-function Outey({ portalNode }: { portalNode: any }) {
-  return <portals.OutPortal node={portalNode} />;
 }
