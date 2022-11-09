@@ -22,6 +22,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import Button from "../components/button";
 import { TextInput } from "../components/input";
+import Link from "next/link";
 
 export default function Page() {
   const isSSR = typeof window === "undefined";
@@ -49,6 +50,11 @@ export default function Page() {
   const deleted = trpc.athletes.delete.useMutation({
     onSuccess: (data) => {
       console.log("deleted an athlete", data);
+    },
+  });
+  const clearAll = trpc.athletes.deleteAll.useMutation({
+    onSuccess: (data) => {
+      console.log("Clear all", data);
     },
   });
 
@@ -361,6 +367,26 @@ export default function Page() {
                 </div>
               </Card>
             ))}
+            {data.length === 0 && (
+              <Link
+                href="/create"
+                className="flex items-center gap-1.5 rounded px-2 py-1 text-sm hover:bg-neutral-900/50 hover:text-white"
+              >
+                <HiOutlinePlus className="text-base" />
+                <span>Add an athlete</span>
+              </Link>
+            )}
+            {data.length > 0 && (
+              <Button
+                onClick={() => clearAll.mutate()}
+                disabled={clearAll.isLoading}
+                loading={clearAll.isLoading}
+                size="lg"
+                variant="secondary"
+              >
+                Clear all
+              </Button>
+            )}
           </AutoAnimate>
         </div>
       </div>
