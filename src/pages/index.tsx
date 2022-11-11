@@ -5,6 +5,7 @@ import {
   HiOutlineEyeOff,
   HiOutlinePlus,
   HiOutlineTrash,
+  HiReply,
   HiSortAscending,
   HiSortDescending,
 } from "react-icons/hi";
@@ -46,22 +47,43 @@ export default function Page() {
     setModal((modal) => !modal);
     setId(id);
   }, []);
-  const { data, isLoading } = trpc.athletes.getAll.useQuery();
+
+  const { data, isLoading, refetch } = trpc.athletes.getAll.useQuery();
+
   const deleted = trpc.athletes.delete.useMutation({
     onSuccess: (data) => {
       console.log("deleted an athlete", data);
+      refetch();
     },
   });
   const clearAll = trpc.athletes.deleteAll.useMutation({
     onSuccess: (data) => {
       console.log("Clear all", data);
+      refetch();
     },
   });
 
   if (!data || isLoading) {
     return <div>No Data YET!</div>;
   }
-  console.log("set id", id);
+
+  const Sorted = () => {
+    if (reverseSort) {
+      data.sort((a, b) => {
+        const BValue = b.attempts.map((at) => parseFloat(at.attempt1));
+        const AValue = a.attempts.map((at) => parseFloat(at.attempt1));
+        return Math.max.apply(null, AValue) - Math.max.apply(null, BValue);
+      });
+      setReverseSort(!reverseSort);
+    } else {
+      data.sort((a, b) => {
+        const BValue = b.attempts.map((at) => parseFloat(at.attempt1));
+        const AValue = a.attempts.map((at) => parseFloat(at.attempt1));
+        return Math.max.apply(null, BValue) - Math.max.apply(null, AValue);
+      });
+      setReverseSort(!reverseSort);
+    }
+  };
 
   return (
     <Layout title="Tablo">
@@ -293,21 +315,29 @@ export default function Page() {
                 {data?.length}
               </span>
             </h2>
-            <button
-              className="relative z-10 -my-2 flex items-center gap-1.5 rounded py-2 px-2 text-sm hover:bg-neutral-900/50 hover:text-white"
-              onClick={() => setReverseSort(!reverseSort)}
-            >
-              {reverseSort ? (
-                <HiSortDescending className="text-xl" />
-              ) : (
-                <HiSortAscending className="text-xl" />
-              )}
-            </button>
+            <div className="flex items-center">
+              <button
+                className="relative z-10 -my-2 flex items-center gap-1.5 rounded py-2 px-2 text-sm hover:bg-neutral-900/50 hover:text-white"
+                onClick={() => data.sort((a, b) => (a < b ? 1 : -1))}
+              >
+                <HiReply />
+              </button>
+              <button
+                className="relative z-10 -my-2 flex items-center gap-1.5 rounded py-2 px-2 text-sm hover:bg-neutral-900/50 hover:text-white"
+                onClick={() => Sorted()}
+              >
+                {reverseSort ? (
+                  <HiSortDescending className="text-xl" />
+                ) : (
+                  <HiSortAscending className="text-xl" />
+                )}
+              </button>
+            </div>
           </div>
           <AutoAnimate
             className={clsx(
-              "flex gap-4",
-              reverseSort ? "flex-col-reverse" : "flex-col"
+              "flex flex-col gap-4"
+              // reverseSort ? "flex-col-reverse" : "flex-col"
             )}
           >
             {data?.map((ath) => (
@@ -407,10 +437,12 @@ function AddAttempt({
   setModal: React.Dispatch<React.SetStateAction<boolean>>;
   athleteId?: string;
 }) {
+  const { refetch } = trpc.athletes.getAll.useQuery();
   const { mutate, isLoading } = trpc.athletes.addAttempt.useMutation({
     onSuccess: (data) => {
       console.log("submitted", data);
       setModal(false);
+      refetch();
     },
   });
   const {
