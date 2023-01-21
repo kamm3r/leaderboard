@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import React from "react";
+
 import { LoadingSpinner } from "./loading";
 
 export type HTMLButtonProps = React.DetailedHTMLProps<
@@ -28,11 +29,11 @@ type ButtonSize = "xs" | "sm" | "base" | "lg" | "xl" | "2xl";
 
 type ButtonIconPosition = "start" | "end";
 
-type ButtonStyle = {
+interface ButtonStyle {
   disabled?: boolean;
   size?: ButtonSize;
   variant?: ButtonVariant;
-};
+}
 
 export type ButtonProps = {
   icon?: React.ReactElement;
@@ -76,7 +77,7 @@ export const ICON_END_CLASSES = {
 
 export const BUTTON_VARIANTS = {
   primary:
-    "text-white border-neutral-700 bg-neutral-600 hover:bg-neutral-700 hover:border-neutral-800 shadow-sm",
+    "text-white border-neutral-900 bg-neutral-800 hover:bg-neutral-900/50 hover:border-neutral-900/70 shadow-sm",
   "primary-inverted":
     "text-neutral-600 border-transparent bg-white hover:bg-neutral-50 shadow-sm",
   secondary:

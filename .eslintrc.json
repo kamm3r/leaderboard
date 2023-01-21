@@ -1,11 +1,27 @@
 {
+  "extends": [
+    "next",
+    "next/core-web-vitals",
+    "prettier",
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/recommended-requiring-type-checking",
+    "plugin:@typescript-eslint/strict",
+    "plugin:prettier/recommended"
+  ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "project": "./tsconfig.json"
   },
-  "plugins": ["@typescript-eslint"],
-  "extends": ["next/core-web-vitals", "plugin:@typescript-eslint/recommended"],
+  "plugins": ["@typescript-eslint", "simple-import-sort"],
+
   "rules": {
-    "@typescript-eslint/consistent-type-imports": "warn"
-  }
+    "@typescript-eslint/consistent-type-imports": "warn",
+
+    // Off-by-default rules we like being on
+    "simple-import-sort/exports": "error",
+    "simple-import-sort/imports": "error"
+  },
+  // Tell ESLint not to look for a parent config
+  "root": true
 }

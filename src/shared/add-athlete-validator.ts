@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 export const addAthleteInput = z.object({
   firstName: z.string(),
@@ -12,7 +12,7 @@ export type AddAthleteInputType = z.infer<typeof addAthleteInput>;
 
 export const addAttemptInput = z.object({
   attempt1: z.string(),
-  athleteId: z.string().cuid().optional()
+  athleteId: z.string().cuid().optional(),
 });
 
 export type AddAttemptInputType = z.infer<typeof addAttemptInput>;

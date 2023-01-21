@@ -1,41 +1,128 @@
-import React, { useState } from "react";
 import clsx from "clsx";
+import type { NextPage } from "next";
+import dynamic from "next/dynamic";
+import Head from "next/head";
+import Image from "next/image";
+import Link from "next/link";
+import React, { useState } from "react";
 import {
+  HiOutlineClipboardCheck,
+  HiOutlineClipboardCopy,
   HiOutlineEye,
   HiOutlineEyeOff,
+  HiOutlineLogout,
   HiOutlinePlus,
   HiOutlineTrash,
-  HiReply,
   HiSortAscending,
   HiSortDescending,
 } from "react-icons/hi";
-
-import Layout from "../components/layout";
-import { AutoAnimate } from "../components/auto-animate";
-import { Card } from "../components/card";
-import { trpc } from "../utils/trpc";
 import * as portals from "react-reverse-portal";
-import {
-  addAttemptInput,
-  type AddAttemptInputType,
-} from "../shared/add-athlete-validator";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useTRPCForm } from "trpc-form";
+
+import LoadingSVG from "../assets/puff.svg";
+import { AutoAnimate } from "../components/auto-animate";
 import Button from "../components/button";
-import { TextInput } from "../components/input";
-import Link from "next/link";
+import { Card } from "../components/card";
+import { TextInput } from "../components/text-input";
+import { addAttemptInput } from "../shared/add-athlete-validator";
+import { api } from "../utils/api";
 
-export default function Page() {
-  const isSSR = typeof window === "undefined";
+/* add better typing then just any L man for that
+ fix this real quick */
+function AddAttempt({
+  onClose,
+  athleteId,
+}: {
+  onClose: () => void;
+  athleteId?: string;
+}) {
+  // const { refetch } = api.athletes.getAll.useQuery();
+  // const { mutate, isLoading } = api.athletes.addAttempt.useMutation({
+  //   onSuccess: (data) => {
+  //     console.log("submitted", data);
+  //     setModal(false);
+  //     void refetch();
+  //   },
+  // });
+  // const {
+  //   handleSubmit,
+  //   register,
+  //   formState: { errors },
+  // } = useForm<AddAttemptInputType>({
+  //   resolver: zodResolver(addAttemptInput),
+  // });
 
+  const utils = api.useContext();
+
+  const form = useTRPCForm({
+    mutation: api.athletes.addAttempt,
+    validator: addAttemptInput,
+
+    onSuccess: () => {
+      void utils.athletes.invalidate();
+      setModal(false);
+      // void refetch();
+    },
+    onSubmit: async (input) => {
+      utils.athletes.getAthlete.setData(
+        input.data.athleteId,
+        input.data.attempt1
+      );
+      await new Promise((r) => setTimeout(r, 1000));
+    },
+  });
+
+  return (
+    <div className="absolute top-0 right-0 left-0 bottom-0 z-50 flex h-screen w-screen items-center justify-center bg-black/50">
+      <div className="relative rounded bg-neutral-800 p-5">
+        <button className="absolute top-5 right-5" onClick={onClose}>
+          L + Ratio
+        </button>
+        <form
+          className="flex flex-col gap-5"
+          // onSubmit={handleSubmit((data) =>
+          //   mutate({ athleteId, attempt1: data.attempt1 })
+          // )}
+          ref={form.ref}
+        >
+          <div className="flex flex-col gap-2">
+            <label className="font-normal" htmlFor={form.attempt1.id()}>
+              Add attempt
+            </label>
+            <input
+              className="mt-1 rounded bg-neutral-900/50 py-2 px-3 focus:border-neutral-500 focus:ring-neutral-500 sm:text-sm"
+              type="text"
+              // {...register("attempt1")}
+              name={form.attempt1.name()}
+              placeholder="60.69"
+            />
+            {form.attempt1.error((e) => (
+              <p className="py-2 text-xs text-red-400">{e.message}</p>
+            ))}
+          </div>
+          <Button
+            type="submit"
+            disabled={form.isSubmitting}
+            loading={form.isSubmitting}
+            size="lg"
+            variant="primary"
+          >
+            Add
+          </Button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+const AthleteView = () => {
   const portalNode = React.useMemo(() => {
-    if (isSSR) {
-      return null;
-    }
+    if (typeof window === "undefined") console.log("no bitch");
     return portals.createHtmlPortalNode();
-  }, [isSSR]);
+  }, []);
   const [reverseSort, setReverseSort] = useState(false);
   const [show, setShow] = useState(false);
+  const [test, setTest] = useState(false);
   const [but, setBut] = useState(false);
   const [modal, setModal] = useState(false);
   const [id, setId] = useState<string>();
@@ -43,40 +130,47 @@ export default function Page() {
   //   setModal((modal) => !modal);
   //   setId(id);
   // };
-  const toggle = React.useCallback((id: string) => {
-    setModal((modal) => !modal);
-    setId(id);
-  }, []);
+  const toggle = React.useCallback(
+    (id: string) => {
+      setModal(!modal);
+      setId(id);
+    },
+    [modal]
+  );
 
-  const { data, isLoading, refetch } = trpc.athletes.getAll.useQuery();
+  const { data, isLoading, refetch } = api.athletes.getAll.useQuery();
 
-  const deleted = trpc.athletes.delete.useMutation({
+  const deleted = api.athletes.delete.useMutation({
     onSuccess: (data) => {
       console.log("deleted an athlete", data);
-      refetch();
+      void refetch();
     },
   });
-  const clearAll = trpc.athletes.deleteAll.useMutation({
+  const clearAll = api.athletes.deleteAll.useMutation({
     onSuccess: (data) => {
       console.log("Clear all", data);
-      refetch();
+      void refetch();
     },
   });
 
-  if (!data || isLoading) {
-    return <div>No Data YET!</div>;
-  }
+  if (isLoading)
+    return (
+      <div className="animate-fade-in-delay flex justify-center p-8">
+        {/* eslint-disable-next-line @typescript-eslint/no-unsafe-assignment */}
+        <Image src={LoadingSVG} alt="loading..." width={200} height={200} />
+      </div>
+    );
 
   const Sorted = () => {
     if (reverseSort) {
-      data.sort((a, b) => {
+      data?.sort((a, b) => {
         const BValue = b.attempts.map((at) => parseFloat(at.attempt1));
         const AValue = a.attempts.map((at) => parseFloat(at.attempt1));
         return Math.max.apply(null, AValue) - Math.max.apply(null, BValue);
       });
       setReverseSort(!reverseSort);
     } else {
-      data.sort((a, b) => {
+      data?.sort((a, b) => {
         const BValue = b.attempts.map((at) => parseFloat(at.attempt1));
         const AValue = a.attempts.map((at) => parseFloat(at.attempt1));
         return Math.max.apply(null, BValue) - Math.max.apply(null, AValue);
@@ -86,9 +180,10 @@ export default function Page() {
   };
 
   return (
-    <Layout title="Tablo">
-      <div className="grid min-h-0 flex-1 grid-cols-7">
-        <div className="col-span-1 flex flex-col gap-4 overflow-y-auto py-4 pl-6 pr-3">
+    <>
+      <div className="grid min-h-0 flex-1 grid-rows-3 gap-4 p-4 sm:grid-cols-7 sm:grid-rows-1 sm:gap-8 sm:p-8">
+        {/* timetable */}
+        <div className="col-span-1 row-span-1 flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-1.5 font-medium">
               <span>Timetable</span>
@@ -117,49 +212,23 @@ export default function Page() {
               </div>
             </Card>
             <Card className="animate-fade-in-down relative flex flex-col gap-4 p-4">
-              <Button
-                onClick={() => setBut(!but)}
-                // disabled={but === true}
-                // loading={but === true}
-                size="lg"
-                variant="primary"
-              >
+              <Button onClick={() => setBut(!but)} size="lg" variant="primary">
                 Submit
               </Button>
               <Button
                 onClick={() => setBut(!but)}
-                // disabled={but === true}
-                // loading={but === true}
                 size="lg"
                 variant="secondary"
               >
                 Submit
               </Button>
-              <Button
-                onClick={() => setBut(!but)}
-                // disabled={but === true}
-                // loading={but === true}
-                size="lg"
-                variant="ghost"
-              >
+              <Button onClick={() => setBut(!but)} size="lg" variant="ghost">
                 Submit
               </Button>
-              <Button
-                onClick={() => setBut(!but)}
-                // disabled={but === true}
-                // loading={but === true}
-                size="lg"
-                variant="danger"
-              >
+              <Button onClick={() => setBut(!but)} size="lg" variant="danger">
                 Cancel
               </Button>
-              <Button
-                onClick={() => setBut(!but)}
-                // disabled={but === true}
-                // loading={but === true}
-                size="lg"
-                variant="text"
-              >
+              <Button onClick={() => setBut(!but)} size="lg" variant="text">
                 <div className="flex items-center gap-2">
                   <HiOutlinePlus />
                   Add
@@ -169,8 +238,6 @@ export default function Page() {
             <Card className="animate-fade-in-down relative flex flex-col gap-4 p-4">
               <Button
                 onClick={() => setBut(!but)}
-                // disabled={but === true}
-                // loading={but === true}
                 size="lg"
                 variant="primary-inverted"
               >
@@ -178,126 +245,164 @@ export default function Page() {
               </Button>
               <Button
                 onClick={() => setBut(!but)}
-                // disabled={but === true}
-                // loading={but === true}
                 size="lg"
                 variant="secondary-inverted"
               >
                 Submit
               </Button>
               <TextInput
-                placeholder="Type something..."
+                placeholder="type..."
                 className="w-full"
                 type="text"
-                prefixEl="dude"
-                suffixEl="dude"
+                prefixEl="Name"
+                suffixEl="Asmondgold"
                 maxLength={400}
               />
             </Card>
           </AutoAnimate>
         </div>
         {/* Preview window */}
-        <div className="col-span-4 flex py-4 pl-3 pr-3">
+        <div className="row-span-1 flex sm:col-span-4">
           <Card className="flex flex-1 flex-col divide-y divide-neutral-900">
-            <AutoAnimate className="flex flex-1 items-center justify-center p-4 text-lg font-medium">
-              {/* <span></span> */}
-              <div className="max-w-xs">
-                <div className="w-full max-w-xs border-t-2 border-cyan-300 bg-black/90">
-                  <h1 className="px-2 uppercase text-cyan-300">Final</h1>
-                  <div className="flex">
-                    <h3 className="bg-cyan-300 px-2 uppercase text-black">
-                      Men&#39;s hammer throw
-                    </h3>
-                    <h4 className="px-2 uppercase">Distance</h4>
-                  </div>
-                  <ul className="">
-                    <li className="flex justify-between border-t-2 border-black/50 px-4 py-1">
-                      1 Sauli Niinisto
-                      <span>80.50m</span>
-                    </li>
-                    <li className="flex justify-between border-t-2 border-black/50 px-4 py-1">
-                      2 Stuart Little
-                      <span>80.10m</span>
-                    </li>
-                    <li className="flex justify-between border-t-2 border-black/50 px-4 py-1">
-                      3 Logan Paul
-                      <span>79.10m</span>
-                    </li>
-                    <li className="flex justify-between border-t-2 border-black/50 px-4 py-1">
-                      4 Warren Buffet
-                      <span>79.06m</span>
-                    </li>
-                    <li className="flex justify-between border-t-2 border-black/50 px-4 py-1">
-                      5 Rudy Wrinkler
-                      <span>75.69m</span>
-                    </li>
-                    <li className=" flex flex-wrap justify-between border-t-2 border-black/50">
-                      <div
-                        className={clsx(
-                          "flex flex-[1_1_100%] justify-between px-4 py-1",
-                          show ? "bg-cyan-300 text-black" : ""
-                        )}
-                      >
-                        6 Aaron Kangas
-                        <span className={show ? "hidden" : "block"}>
-                          75.10m
-                        </span>
-                      </div>
-                      <ul
-                        className={clsx(
-                          "ml-1 flex-[1_1_100%] bg-gray-300 text-black",
-                          show ? "flex" : "hidden"
-                        )}
-                      >
-                        <li className="px-1 py-3">69.50</li>
-                        <li className="bg-gray-200 px-1 py-3">69.55</li>
-                        <li className="bg-cyan-300/50 px-1 py-3">75.10</li>
-                        <li className="px-1 py-3">55.55</li>
-                        <li className="bg-gray-200 px-1 py-3">70.69</li>
-                        <li className="px-1 py-3">67.59</li>
-                      </ul>
-                    </li>
-                    <li className="flex justify-between border-t-2 border-black/50 px-4 py-1">
-                      7 Pavel Fajdek
-                      <span>70.10m</span>
-                    </li>
-                    <li className="flex justify-between border-t-2 border-black/50 px-4 py-1">
-                      8 Kokhan
-                      <span>70.09m</span>
-                    </li>
-                    <li className="flex justify-between border-t-2 border-black/50 px-4 py-1">
-                      9 Sean Donnelly
-                      <span>70.08m</span>
-                    </li>
-                    <li className="flex justify-between border-t-2 border-black/50 px-4 py-1">
-                      10 Bob Ross
-                      <span>70.05m</span>
-                    </li>
-                  </ul>
+            <TextInput
+              placeholder="type name here..."
+              className="w-full rounded-b-none border-none shadow-none focus:border focus:shadow-sm"
+              type="text"
+              prefixEl="Competition"
+              maxLength={400}
+            />
+            <div className="flex min-h-0 flex-1 flex-col p-4">
+              <div className="flex min-h-0 flex-1 flex-col">
+                <div className="flex items-baseline justify-between">
+                  <h2 className="font-bold">Active Tablo</h2>
+                  <Button className="-m-2 !p-2" variant="ghost">
+                    <div className="flex items-center">
+                      <HiOutlineClipboardCopy />
+                      &nbsp; Copy embed url
+                    </div>
+                  </Button>
                 </div>
-                <h1 className="mt-1 inline-flex bg-black/90 p-1 uppercase text-cyan-300">
-                  Tour De Hammer 2023
-                </h1>
+                <div className="min-h-0 flex-1 overflow-y-auto">
+                  <AutoAnimate className="flex min-h-full items-center justify-center ">
+                    {test ? (
+                      <div className="max-w-xs">
+                        <div className="w-full max-w-xs border-t-2 border-cyan-300 bg-black/90">
+                          <h1 className="px-2 uppercase text-cyan-300">
+                            Final
+                          </h1>
+                          <div className="flex">
+                            <h3 className="bg-cyan-300 px-2 uppercase text-black">
+                              Men&#39;s hammer throw
+                            </h3>
+                            <h4 className="px-2 uppercase">Distance</h4>
+                          </div>
+                          <ul className="">
+                            <li className="flex justify-between border-t-2 border-black/50 px-4 py-1">
+                              1 Sauli Niinisto
+                              <span>80.50m</span>
+                            </li>
+                            <li className="flex justify-between border-t-2 border-black/50 px-4 py-1">
+                              2 Stuart Little
+                              <span>80.10m</span>
+                            </li>
+                            <li className="flex justify-between border-t-2 border-black/50 px-4 py-1">
+                              3 Logan Paul
+                              <span>79.10m</span>
+                            </li>
+                            <li className="flex justify-between border-t-2 border-black/50 px-4 py-1">
+                              4 Warren Buffet
+                              <span>79.06m</span>
+                            </li>
+                            <li className="flex justify-between border-t-2 border-black/50 px-4 py-1">
+                              5 Rudy Wrinkler
+                              <span>75.69m</span>
+                            </li>
+                            <li className=" flex flex-wrap justify-between border-t-2 border-black/50">
+                              <div
+                                className={clsx(
+                                  "flex flex-[1_1_100%] justify-between px-4 py-1",
+                                  show ? "bg-cyan-300 text-black" : ""
+                                )}
+                              >
+                                6 Aaron Kangas
+                                <span className={show ? "hidden" : "block"}>
+                                  75.10m
+                                </span>
+                              </div>
+                              <ul
+                                className={clsx(
+                                  "ml-1 flex-[1_1_100%] bg-gray-300 text-black",
+                                  show ? "flex" : "hidden"
+                                )}
+                              >
+                                <li className="px-1 py-3">69.50</li>
+                                <li className="bg-gray-200 px-1 py-3">69.55</li>
+                                <li className="bg-cyan-300/50 px-1 py-3">
+                                  75.10
+                                </li>
+                                <li className="px-1 py-3">55.55</li>
+                                <li className="bg-gray-200 px-1 py-3">70.69</li>
+                                <li className="px-1 py-3">67.59</li>
+                              </ul>
+                            </li>
+                            <li className="flex justify-between border-t-2 border-black/50 px-4 py-1">
+                              7 Pavel Fajdek
+                              <span>70.10m</span>
+                            </li>
+                            <li className="flex justify-between border-t-2 border-black/50 px-4 py-1">
+                              8 Kokhan
+                              <span>70.09m</span>
+                            </li>
+                            <li className="flex justify-between border-t-2 border-black/50 px-4 py-1">
+                              9 Sean Donnelly
+                              <span>70.08m</span>
+                            </li>
+                            <li className="flex justify-between border-t-2 border-black/50 px-4 py-1">
+                              10 Bob Ross
+                              <span>70.05m</span>
+                            </li>
+                          </ul>
+                        </div>
+                        <h1 className="mt-1 inline-flex bg-black/90 p-1 uppercase text-cyan-300">
+                          Tour De Hammer 2023
+                        </h1>
+                      </div>
+                    ) : (
+                      <p className="text-sm font-medium text-gray-600">
+                        No active tablo
+                      </p>
+                    )}
+                  </AutoAnimate>
+                </div>
               </div>
-            </AutoAnimate>
-            <div className="grid grid-cols-3 divide-x divide-neutral-900">
+            </div>
+            <div className="grid grid-cols-3 divide-x  divide-neutral-900">
               <button
-                className="flex items-center justify-center gap-2 rounded-bl p-4 hover:bg-neutral-700"
-                // onClick={() => unpinQuestion()}
+                className="flex items-center justify-center gap-2 rounded-br p-3 text-sm hover:bg-neutral-700 sm:p-4 sm:text-base"
+                // onClick={() => unpinAthlete()}
+                onClick={() => setTest(!test)}
               >
-                <HiOutlineEyeOff />
-                Hide
+                {test ? (
+                  <>
+                    <HiOutlineEye /> Show
+                  </>
+                ) : (
+                  <>
+                    <HiOutlineEyeOff /> Hide
+                  </>
+                )}
               </button>
               <button
-                className="flex items-center justify-center gap-2 rounded-bl p-4 hover:bg-neutral-700"
-                // onClick={() => unpinQuestion()}
+                className="flex items-center justify-center gap-2 rounded-br p-3 text-sm hover:bg-neutral-700 sm:p-4 sm:text-base"
+                // onClick={() => unpinAllAthlete()}
               >
                 {/* <FaEyeSlash /> */}
-                All Results
+                {/* TODO maybe fix */}
+                **All Athlete Results**
               </button>
 
               <button
-                className="flex items-center justify-center gap-2 rounded-br p-4 hover:bg-neutral-700"
+                className="flex items-center justify-center gap-2 rounded-br p-3 text-sm hover:bg-neutral-700 sm:p-4 sm:text-base"
                 onClick={() => setShow(!show)}
               >
                 {/* <FaCaretSquareRight /> */}
@@ -307,217 +412,236 @@ export default function Page() {
           </Card>
         </div>
         {/* Athletes column */}
-        <div className="col-span-2 flex flex-col gap-4 overflow-y-auto py-4 pl-3 pr-6">
+        <div className="row-span-2 flex flex-col gap-2 sm:col-span-2 sm:row-span-1">
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-1.5 font-medium">
               <span>Athletes</span>
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-neutral-800 text-xs font-bold">
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-neutral-800 text-xs font-extrabold">
                 {data?.length}
               </span>
-            </h2>
-            <div className="flex items-center">
               <button
-                className="relative z-10 -my-2 flex items-center gap-1.5 rounded py-2 px-2 text-sm hover:bg-neutral-900/50 hover:text-white"
-                onClick={() => data.sort((a, b) => (a < b ? 1 : -1))}
-              >
-                <HiReply />
-              </button>
-              <button
-                className="relative z-10 -my-2 flex items-center gap-1.5 rounded py-2 px-2 text-sm hover:bg-neutral-900/50 hover:text-white"
+                className="relative z-10 -my-2 flex items-center gap-1.5 rounded py-2 px-2  hover:bg-neutral-900/50 hover:text-white"
                 onClick={() => Sorted()}
               >
-                {reverseSort ? (
-                  <HiSortDescending className="text-xl" />
-                ) : (
-                  <HiSortAscending className="text-xl" />
-                )}
+                {reverseSort ? <HiSortDescending /> : <HiSortAscending />}
               </button>
-            </div>
+            </h2>
           </div>
-          <AutoAnimate
-            className={clsx(
-              "flex flex-col gap-4"
-              // reverseSort ? "flex-col-reverse" : "flex-col"
-            )}
-          >
-            {data?.map((ath) => (
-              <Card
-                key={ath.id}
-                className="animate-fade-in-down relative flex flex-col gap-4 p-4"
-              >
-                <div
-                  key={ath.id}
-                  className="flex items-center gap-3 break-words"
+          <AutoAnimate className="flex min-h-0 flex-1 flex-col rounded-lg bg-neutral-800/25">
+            <AutoAnimate
+              as="ul"
+              className="flex flex-col gap-2 overflow-y-auto p-2"
+            >
+              {data?.map((ath) => (
+                <li key={ath.id}>
+                  <Card className="animate-fade-in-down relative flex flex-col gap-4 p-4">
+                    <div
+                      key={ath.id}
+                      className="flex items-center gap-3 break-words"
+                    >
+                      <p className="">{ath.name}</p>
+                      <span className="text-xs opacity-70">
+                        PB: {ath.PB} SB: {ath.SB}
+                      </span>
+                    </div>
+
+                    <div className="flex gap-2">
+                      {ath.attempts.map((at) => (
+                        <p
+                          key={at.id}
+                          className="-my-1 rounded bg-neutral-900/50 px-2 py-1 text-sm"
+                        >
+                          {at.attempt1}
+                        </p>
+                      ))}
+                      {ath.attempts.length < 6 && (
+                        <button
+                          className="relative -my-1 flex items-center gap-1.5 rounded px-2 py-1 text-sm hover:bg-neutral-900/50 hover:text-white"
+                          onClick={() => toggle(ath.id)}
+                        >
+                          <HiOutlinePlus className="text-base" />
+                          <span>Add</span>
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between text-gray-300">
+                      <button
+                        onClick={() => setBut(!but)}
+                        className="relative z-10 -my-1 -mx-2 flex items-center gap-1.5 rounded py-1 px-2 text-sm hover:bg-neutral-900/50 hover:text-white"
+                      >
+                        {!but ? (
+                          <HiOutlineEye className="text-xl" />
+                        ) : (
+                          <HiOutlineEyeOff className="text-xl" />
+                        )}
+                        <span>Show athlete</span>
+                      </button>
+
+                      <button
+                        className="relative z-10 -my-1 -mx-2 flex items-center gap-1.5 rounded py-1 px-2 text-sm hover:bg-neutral-900/50 hover:text-white"
+                        onClick={() => deleted.mutate({ id: ath.id })}
+                      >
+                        <HiOutlineTrash className="text-xl" />
+                        <span>Remove</span>
+                      </button>
+                    </div>
+                  </Card>
+                </li>
+              ))}
+              {data?.length === 0 ? (
+                <Link
+                  href="/create"
+                  className="flex items-center gap-1.5 rounded px-2 py-1 text-sm hover:bg-neutral-900/50 hover:text-white"
                 >
-                  <p className="">{ath.name}</p>
-                  <span className="text-xs opacity-70">
-                    PB: {ath.PB} SB: {ath.SB}
-                  </span>
-                </div>
-
-                <div className="flex gap-2">
-                  {ath.attempts.map((at) => (
-                    <p
-                      key={at.id}
-                      className="-my-1 rounded bg-neutral-900/50 px-2 py-1 text-sm"
-                    >
-                      {at.attempt1}
-                    </p>
-                  ))}
-                  {ath.attempts.length < 6 && (
-                    <button
-                      className="relative -my-1 flex items-center gap-1.5 rounded px-2 py-1 text-sm hover:bg-neutral-900/50 hover:text-white"
-                      onClick={() => toggle(ath.id)}
-                    >
-                      <HiOutlinePlus className="text-base" />
-                      <span>Add</span>
-                    </button>
-                  )}
-                </div>
-                <div className="flex items-center justify-between text-gray-300">
-                  <button
-                    onClick={() => setBut(!but)}
-                    className="relative z-10 -my-1 -mx-2 flex items-center gap-1.5 rounded py-1 px-2 text-sm hover:bg-neutral-900/50 hover:text-white"
-                  >
-                    {!but ? (
-                      <HiOutlineEye className="text-xl" />
-                    ) : (
-                      <HiOutlineEyeOff className="text-xl" />
-                    )}
-                    <span>Show athlete</span>
-                  </button>
-
-                  <button
-                    className="relative z-10 -my-1 -mx-2 flex items-center gap-1.5 rounded py-1 px-2 text-sm hover:bg-neutral-900/50 hover:text-white"
-                    onClick={() => deleted.mutate({ id: ath.id })}
-                  >
-                    <HiOutlineTrash className="text-xl" />
-                    <span>Remove</span>
-                  </button>
-                </div>
-              </Card>
-            ))}
-            {data.length === 0 && (
-              <Link
-                href="/create"
-                className="flex items-center gap-1.5 rounded px-2 py-1 text-sm hover:bg-neutral-900/50 hover:text-white"
-              >
-                <HiOutlinePlus className="text-base" />
-                <span>Add an athlete</span>
-              </Link>
-            )}
-            {data.length > 0 && (
-              <Button
-                onClick={() => clearAll.mutate()}
-                disabled={clearAll.isLoading}
-                loading={clearAll.isLoading}
-                size="lg"
-                variant="secondary"
-              >
-                Clear all
-              </Button>
-            )}
+                  <HiOutlinePlus className="text-base" />
+                  <span>Add an athlete</span>
+                </Link>
+              ) : (
+                <Button
+                  onClick={() => clearAll.mutate()}
+                  disabled={clearAll.isLoading}
+                  loading={clearAll.isLoading}
+                  size="lg"
+                  variant="primary"
+                  className="sticky bottom-0 z-50 shadow"
+                >
+                  Clear all
+                </Button>
+              )}
+            </AutoAnimate>
           </AutoAnimate>
         </div>
       </div>
-      <portals.InPortal node={portalNode!}>
-        <AddAttempt setModal={setModal} athleteId={id} />
+      <portals.InPortal node={portalNode}>
+        <AddAttempt onClose={() => setModal(!modal)} athleteId={id} />
       </portals.InPortal>
-      {modal && <portals.OutPortal node={portalNode!} />}
-    </Layout>
+      {modal && <portals.OutPortal node={portalNode} />}
+    </>
   );
-}
+};
 
-/* add better typing then just any L man for that
- fix this real quick */
-function AddAttempt({
-  setModal,
-  athleteId,
-}: {
-  setModal: React.Dispatch<React.SetStateAction<boolean>>;
-  athleteId?: string;
-}) {
-  const { refetch } = trpc.athletes.getAll.useQuery();
-  const { mutate, isLoading } = trpc.athletes.addAttempt.useMutation({
-    onSuccess: (data) => {
-      console.log("submitted", data);
-      setModal(false);
-      refetch();
-    },
-  });
-  const {
-    handleSubmit,
-    register,
-    formState: { errors },
-  } = useForm<AddAttemptInputType>({
-    resolver: zodResolver(addAttemptInput),
-  });
+function AthleteViewWrapper() {
+  // const { data: sesh } = useSession();
+
+  // if (!sesh || !sesh.user?.id) return null;
 
   return (
-    <div
-      className="absolute top-0 right-0 left-0 bottom-0 z-50 flex h-screen w-screen items-center justify-center bg-black/50"
-      // onClick={() => setModal(false)}
-    >
-      <div className="relative rounded bg-neutral-800 p-5">
-        <button
-          className="absolute top-5 right-5"
-          onClick={() => setModal(false)}
-        >
-          L + Ratio
-        </button>
-        <form
-          className="flex flex-col gap-5"
-          onSubmit={handleSubmit((data) => {
-            console.log("submit", data);
-            mutate({
-              athleteId,
-              attempt1: data.attempt1,
-            });
-          })}
-        >
-          <div className="flex flex-col gap-2">
-            <label className="font-normal">Add attempt</label>
-            <input
-              className="mt-1 rounded bg-neutral-900/50 py-2 px-3 focus:border-neutral-500 focus:ring-neutral-500 sm:text-sm"
-              type="text"
-              {...register("attempt1")}
-              placeholder="60.69"
-            />
-            {errors.attempt1 && (
-              <p className="py-2 text-xs text-red-400">
-                {errors.attempt1.message}
-              </p>
-            )}
-          </div>
-          {/* <p>{id}</p> */}
-          {/* <div className="flex flex-col gap-2">
-
-              <label className="font-normal">Athlete ID</label>
-              <input
-                // disabled
-                className="mt-1 rounded bg-neutral-900/50 py-2 px-3 focus:border-neutral-500 focus:ring-neutral-500 disabled:opacity-50 sm:text-sm"
-                type="text"
-                {...register("athleteId")}
-                defaultValue={athleteID}
-              />
-            </div> */}
-          {/* <button
-              type="submit"
-              className="rounded bg-neutral-500 py-2 px-4 text-sm font-medium hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
-            >
-              Add
-            </button> */}
-          <Button
-            type="submit"
-            disabled={isLoading}
-            loading={isLoading}
-            size="lg"
-            variant="primary"
-          >
-            Add
-          </Button>
-        </form>
-      </div>
-    </div>
+    // <PusherProvider slug={`user-${sesh.user?.id}`}>
+    <AthleteView />
+    // </PusherProvider>
   );
 }
+
+const LazyAthleteView = dynamic(() => Promise.resolve(AthleteViewWrapper), {
+  ssr: false,
+});
+
+const NavButtons = () => {
+  const [copy, setCopy] = useState<boolean>(false);
+  const copyUrlToClipboard = (path: string) => {
+    setCopy(true);
+    void navigator.clipboard.writeText(`${window.location.origin}${path}`);
+    setTimeout(() => setCopy(false), 1000);
+  };
+
+  return (
+    <nav className="flex gap-6">
+      <Link
+        href="/create"
+        className="flex items-center gap-2 text-base font-medium transition-all hover:underline"
+      >
+        Create
+      </Link>
+      <Button
+        onClick={() => copyUrlToClipboard(`/embed/1`)}
+        variant="primary"
+        size="lg"
+      >
+        <div className="flex items-center">
+          {copy ? (
+            <HiOutlineClipboardCheck className="text-xl text-gray-100" />
+          ) : (
+            <HiOutlineClipboardCopy className="text-xl" />
+          )}
+          <span className="sr-only sm:not-sr-only">&nbsp; Embed url</span>
+        </div>
+      </Button>
+
+      <Button variant="primary" size="lg">
+        <div className="flex items-center">
+          <HiOutlineLogout />
+          <span className="sr-only sm:not-sr-only">&nbsp; Logout</span>
+        </div>
+      </Button>
+    </nav>
+  );
+};
+
+const HomeContent = () => {
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <header className="flex items-center justify-between px-4 pt-4 pb-2 sm:py-4 sm:px-8">
+        <Link
+          href="/"
+          className="relative whitespace-nowrap text-2xl font-bold"
+        >
+          Tablo{" "}
+          <sup className="absolute top-0 left-[calc(100%+.25rem)] text-xs font-extrabold text-gray-400">
+            [BETA]
+          </sup>
+        </Link>
+        <NavButtons />
+      </header>
+      <LazyAthleteView />
+    </div>
+  );
+};
+
+const Home: NextPage = () => {
+  return (
+    <>
+      <Head>
+        <title>{"Stream Leaderboard Tool"}</title>
+        <meta name="description" content="Tablo" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+
+      <div className="justify-betwee relative flex h-screen w-screen flex-col">
+        <HomeContent />
+        <footer className="flex justify-between py-4 px-8">
+          <span>
+            created by &hearts;{" "}
+            <a
+              href="https://twitter.com/kamm3r"
+              className="font-bold text-slate-300 hover:underline"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Marco
+            </a>
+          </span>
+          <div className="flex gap-4">
+            <a
+              href="https://github.com/kamm3r/tablo"
+              className="font-bold text-slate-300 hover:underline"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Github
+            </a>
+            <a
+              href="nuts"
+              className="font-bold text-slate-300 hover:underline"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Deez
+            </a>
+          </div>
+        </footer>
+      </div>
+    </>
+  );
+};
+
+export default Home;

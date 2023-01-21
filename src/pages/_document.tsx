@@ -1,26 +1,13 @@
-import { Html, Head, Main, NextScript } from "next/document";
+import { Head, Html, Main, NextScript } from "next/document";
 
 export default function Document() {
   return (
     <Html>
-      <Head>
-        <link
-          rel="preload"
-          href="/fonts/Poppins-Regular.tff"
-          as="font"
-          type="font/tff"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="preload"
-          href="/fonts/Poppins-Black.tff"
-          as="font"
-          type="font/tff"
-          crossOrigin="anonymous"
-        />
-      </Head>
+      <Head />
       <body>
         <Main />
+        {/* Here we will mount our modal portal */}
+        <div id="modal" />
         <NextScript />
       </body>
     </Html>

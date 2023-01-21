@@ -1,4 +1,5 @@
 import classNames from "clsx";
+import type { ReactElement } from "react";
 import React from "react";
 
 export type InputProps = React.DetailedHTMLProps<
@@ -9,8 +10,8 @@ export type InputProps = React.DetailedHTMLProps<
 export const TextInput = React.forwardRef<
   HTMLInputElement,
   {
-    prefixEl?: React.ReactElement | string;
-    suffixEl?: React.ReactElement | string;
+    prefixEl?: ReactElement | string;
+    suffixEl?: ReactElement | string;
     className?: string;
   } & InputProps
 >((props, ref) => {
