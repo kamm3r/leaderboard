@@ -6,10 +6,10 @@ Leaderboard for streaming (Throwing events)
 
 ```bash
 # npm
-npm install
+npm i
 npm run dev
 # pnpm
-pnpm install
+pnpm i
 pnpm dev
 ```
 

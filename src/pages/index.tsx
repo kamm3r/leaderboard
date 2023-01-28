@@ -12,6 +12,7 @@ import {
   HiOutlineLogout,
   HiOutlinePlus,
   HiOutlineTrash,
+  HiPlus,
   HiSortAscending,
   HiSortDescending,
 } from "react-icons/hi";
@@ -24,7 +25,6 @@ import { Card } from "../components/card";
 import { TextInput } from "../components/text-input";
 import { addAttemptInput } from "../shared/add-athlete-validator";
 import { type RouterOutputs, api } from "../utils/api";
-import { quicksort } from "../utils/quicksort";
 
 const AddAttempt: React.FC<{
   onClose: () => void;
@@ -109,6 +109,14 @@ const Board: React.FC<{
   meetName: string;
   onShow: boolean;
 }> = ({ data, status, meetName, onShow }) => {
+  const smuck = data.map((ass) =>
+    ass.attempts.map((cock) => parseFloat(cock.attempt1))
+  );
+
+  const cockInAss = smuck.map((pussy) => Math.max(...pussy));
+
+  console.log(cockInAss);
+
   return (
     <div className="max-w-xs">
       <div className="w-full max-w-xs border-t-2 border-cyan-300 bg-black/90">
@@ -127,7 +135,11 @@ const Board: React.FC<{
             >
               <div className="flex flex-[1_1_100%] justify-between px-4 py-1">
                 {a.name}
-                <span>75.10m</span>
+                <span>
+                  {Math.max(
+                    ...a.attempts.map((cock) => parseFloat(cock.attempt1))
+                  )}
+                </span>
               </div>
               <ul
                 className={clsx(
@@ -328,22 +340,13 @@ const AthleteView = () => {
   //   }
   // };
 
-  // const otherAthlete = data;
+  const otherAthlete = data?.filter((a) => a.id) ?? [];
 
-  // const athletesSorted = reverseSort
-  //   ? [...otherAthlete].reverse()
-  //   : otherAthlete;
+  const athletesSorted = reverseSort
+    ? [...otherAthlete].reverse()
+    : otherAthlete;
 
-  const ass = data?.map((a) => a.attempts);
-
-  const ssd = ass?.map((a) => a.map((at) => at.attempt1));
-  const s = ssd?.map((as) => as.map(parseFloat));
-  const ff: any[] = new Array(s?.flat());
-
-  console.log("BOBSBefore", ff);
-  quicksort(ff, 0, ff.length - 1);
-  console.log("BOBSorVagana", ssd);
-  console.log("BOBS", ff);
+  console.log("s", athletesSorted);
 
   return (
     <>
@@ -443,12 +446,7 @@ const AthleteView = () => {
               <div className="flex min-h-0 flex-1 flex-col">
                 <div className="flex items-baseline justify-between">
                   <h2 className="font-bold">Active Tablo</h2>
-                  <Button className="-m-2 !p-2" variant="ghost">
-                    <div className="flex items-center">
-                      <HiOutlineClipboardCopy />
-                      &nbsp; Copy embed url
-                    </div>
-                  </Button>
+                  <Embed />
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto">
                   <AutoAnimate className="flex min-h-full items-center justify-center ">
@@ -599,6 +597,11 @@ const AthleteView = () => {
                 {reverseSort ? <HiSortDescending /> : <HiSortAscending />}
               </button>
             </h2>
+            <Button variant="secondary">
+              <Link href="/create">
+                <HiPlus className="-mx-1.5" />
+              </Link>
+            </Button>
           </div>
           <AutoAnimate className="flex min-h-0 flex-1 flex-col rounded-lg bg-neutral-800/25">
             <AutoAnimate
@@ -706,37 +709,35 @@ const LazyAthleteView = dynamic(() => Promise.resolve(AthleteViewWrapper), {
   ssr: false,
 });
 
-const NavButtons = () => {
+function Embed() {
   const [copy, setCopy] = useState<boolean>(false);
   const copyUrlToClipboard = (path: string) => {
     setCopy(true);
     void navigator.clipboard.writeText(`${window.location.origin}${path}`);
     setTimeout(() => setCopy(false), 1000);
   };
+  return (
+    <Button
+      className="-m-2 !p-2"
+      onClick={() => copyUrlToClipboard(`/embed/1`)}
+      variant="ghost"
+      size="lg"
+      icon={
+        copy ? (
+          <HiOutlineClipboardCheck className="text-gray-100" />
+        ) : (
+          <HiOutlineClipboardCopy />
+        )
+      }
+    >
+      <span className="sr-only text-sm sm:not-sr-only">Embed url</span>
+    </Button>
+  );
+}
 
+const NavButtons = () => {
   return (
     <nav className="flex gap-6">
-      <Link
-        href="/create"
-        className="flex items-center gap-2 text-base font-medium transition-all hover:underline"
-      >
-        Create
-      </Link>
-      <Button
-        onClick={() => copyUrlToClipboard(`/embed/1`)}
-        variant="primary"
-        size="lg"
-      >
-        <div className="flex items-center">
-          {copy ? (
-            <HiOutlineClipboardCheck className="text-xl text-gray-100" />
-          ) : (
-            <HiOutlineClipboardCopy className="text-xl" />
-          )}
-          <span className="sr-only sm:not-sr-only">&nbsp; Embed url</span>
-        </div>
-      </Button>
-
       <Button variant="primary" size="lg">
         <div className="flex items-center">
           <HiOutlineLogout />
@@ -776,7 +777,7 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="justify-betwee relative flex h-screen w-screen flex-col">
+      <div className="relative flex h-screen w-screen flex-col justify-between">
         <HomeContent />
         <footer className="flex justify-between py-4 px-8">
           <span>

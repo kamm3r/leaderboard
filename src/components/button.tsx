@@ -123,7 +123,8 @@ const ButtonContent: React.FC<{
           className={clsx(
             { invisible: loading },
             ICON_SIZE_CLASSES[size],
-            ICON_START_CLASSES[size]
+            ICON_START_CLASSES[size],
+            "flex items-center"
           )}
         >
           {icon}
@@ -135,7 +136,8 @@ const ButtonContent: React.FC<{
           className={clsx(
             { invisible: loading },
             ICON_SIZE_CLASSES[size],
-            ICON_END_CLASSES[size]
+            ICON_END_CLASSES[size],
+            "flex items-center"
           )}
         >
           {icon}
