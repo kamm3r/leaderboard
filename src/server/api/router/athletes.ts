@@ -50,7 +50,7 @@ export const athletesRouter = createTRPCRouter({
       });
       return attempt;
     }),
-  pin: publicProcedure
+  edit: publicProcedure
     .input(
       z.object({
         id: z.string().cuid(),
@@ -68,23 +68,19 @@ export const athletesRouter = createTRPCRouter({
       }
       return edit;
     }),
-  edit: protectedProcedure
-    .input(
-      z.object({
-        id: z.string().cuid(),
-      })
-    )
-    .mutation(async ({ input }) => {
-      const edit = await prisma.athlete.findFirst({
+  pin: protectedProcedure
+    .input(z.object({ id: z.string().cuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const athlete = await prisma.athlete.findFirst({
         where: { id: input.id },
       });
-      if (!edit) {
+      if (athlete?.id !== ctx.session.user.id) {
         throw new TRPCError({
           message: "NOT YOUR ATTEMPT",
           code: "UNAUTHORIZED",
         });
       }
-      return edit;
+      return athlete;
     }),
   delete: publicProcedure
     .input(

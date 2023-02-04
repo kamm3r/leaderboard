@@ -77,23 +77,24 @@ export const ICON_END_CLASSES = {
 
 export const BUTTON_VARIANTS = {
   primary:
-    "text-white border-neutral-900 bg-neutral-800 hover:bg-neutral-900/50 hover:border-neutral-900/70 shadow-sm",
+    "text-white border-neutral-700 bg-neutral-600 hover:bg-neutral-700 hover:border-neutral-800 shadow-sm",
   "primary-inverted":
     "text-neutral-600 border-transparent bg-white hover:bg-neutral-50 shadow-sm",
   secondary:
-    "text-white border-gray-700 bg-gray-800 hover:bg-gray-700 hover:text-gray-100 shadow-sm",
+    "text-white border-neutral-700 bg-neutral-800 hover:bg-neutral-700 hover:text-neutral-100 shadow-sm",
   "secondary-inverted":
-    "text-gray-900 border-transparent bg-gray-100 hover:bg-gray-200 shadow-sm",
-  ghost: "text-white border-transparent hover:bg-gray-700 hover:text-gray-100",
+    "text-neutral-900 border-transparent bg-neutral-100 hover:bg-neutral-200 shadow-sm",
+  ghost:
+    "text-white border-transparent hover:bg-neutral-900/50 hover:text-neutral-100",
   danger:
     "text-white border-red-700 bg-red-600 hover:bg-red-700 hover:border-red-800",
-  text: "text-white border-transparent hover:text-gray-300",
+  text: "text-white border-transparent hover:text-neutral-300",
 };
 
 export const getButtonClasses = (
   style: ButtonStyle = {},
   ...rest: string[]
-) => {
+): string => {
   const { disabled, size = "base", variant = "secondary" } = style;
   return clsx(
     BUTTON_CLASSES,
@@ -104,13 +105,21 @@ export const getButtonClasses = (
   );
 };
 
-const ButtonContent: React.FC<{
+interface ButtonContentType {
   loading?: boolean;
   size?: ButtonSize;
   icon?: React.ReactElement;
   iconPosition?: ButtonIconPosition;
   children?: React.ReactNode;
-}> = ({ loading, icon, iconPosition = "start", size = "base", children }) => {
+}
+
+const ButtonContent: React.FC<ButtonContentType> = ({
+  loading,
+  icon,
+  iconPosition = "start",
+  size = "base",
+  children,
+}): JSX.Element => {
   return (
     <>
       {loading && (
@@ -155,7 +164,7 @@ const ButtonContent: React.FC<{
 export const ButtonLink = React.forwardRef<
   HTMLAnchorElement,
   ButtonProps & HTMLAnchorProps
->((props, ref) => {
+>((props, ref): JSX.Element => {
   const { className = "", disabled, size, variant, ...rest } = props;
   return (
     <a
@@ -178,7 +187,7 @@ ButtonLink.displayName = "ButtonLink";
 export const Button = React.forwardRef<
   HTMLButtonElement,
   ButtonProps & HTMLButtonProps
->((props, ref) => {
+>((props, ref): JSX.Element => {
   const { className = "", disabled, size, variant, ...rest } = props;
   return (
     <button
