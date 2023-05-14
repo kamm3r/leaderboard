@@ -43,7 +43,7 @@ export type ButtonProps = {
 
 export const BUTTON_SIZES = {
   xs: "text-xs px-2.5 py-1.5 rounded",
-  sm: "text-sm px-3 py-2 leading-4 rounded",
+  sm: "text-sm/4 px-3 py-2 rounded",
   base: "text-sm px-4 py-2 rounded",
   lg: "text-base px-4 py-2 rounded-md",
   xl: "text-lg px-6 py-3 rounded-md",

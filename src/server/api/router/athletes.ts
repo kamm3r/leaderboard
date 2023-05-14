@@ -7,6 +7,7 @@ import {
 } from "../../../shared/add-athlete-validator";
 import { prisma } from "../../db";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
+import { pusherServerClient } from "../../pusher";
 
 export const athletesRouter = createTRPCRouter({
   addAthlete: publicProcedure
@@ -80,6 +81,9 @@ export const athletesRouter = createTRPCRouter({
           code: "UNAUTHORIZED",
         });
       }
+      await pusherServerClient.trigger(`user-${athlete.id}`, "athlete-pinned", {
+        athlete,
+      });
       return athlete;
     }),
   delete: publicProcedure

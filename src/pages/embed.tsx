@@ -1,10 +1,9 @@
 import dynamic from "next/dynamic";
 import Head from "next/head";
-import { useRouter } from "next/router";
-import { api } from "../../utils/api";
-import { PusherProvider } from "../../utils/pusher";
-import { useMeetNameStore } from "../../utils/store";
-import { Board } from "../index";
+import { api } from "../utils/api";
+import { PusherProvider } from "../utils/pusher";
+import { useMeetNameStore } from "../utils/store";
+import { Board } from "./index";
 
 type CompProps = {
   userId?: string;
@@ -48,11 +47,6 @@ const LazyEmbedView = dynamic(() => Promise.resolve(BrowserEmbedView), {
 });
 
 const BrowserEmbedQuestionView = () => {
-  const { query } = useRouter();
-  if (!query.uid || typeof query.uid !== "string") {
-    return null;
-  }
-
   return (
     <PusherProvider slug={" "}>
       <LazyEmbedView />

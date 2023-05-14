@@ -45,7 +45,7 @@ export default function NotFound() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="justify-betwee relative flex h-screen w-screen flex-col">
+      <div className="justify-between relative flex h-screen w-screen flex-col">
         <Content />
         <footer className="flex justify-between py-4 px-8">
           <span>
