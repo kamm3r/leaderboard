@@ -1,13 +1,26 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import {
-  addAthleteInput,
-  addAttemptInput,
-} from "../../../shared/add-athlete-validator";
 import { prisma } from "../../db";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { pusherServerClient } from "../../pusher";
+
+export const addAthleteInput = z.object({
+  firstName: z.string(),
+  lastName: z.string(),
+  club: z.string(),
+  pb: z.string().optional().default(""),
+  sb: z.string().optional().default(""),
+});
+
+export type AddAthleteInputType = z.infer<typeof addAthleteInput>;
+
+export const addAttemptInput = z.object({
+  attempt1: z.string(),
+  athleteId: z.string().cuid(),
+});
+
+export type AddAttemptInputType = z.infer<typeof addAttemptInput>;
 
 export const athletesRouter = createTRPCRouter({
   addAthlete: publicProcedure

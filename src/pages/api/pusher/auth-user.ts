@@ -4,7 +4,7 @@ import { pusherServerClient } from "../../../server/pusher";
 export default function pusherAuthUserEndpoint(
   req: NextApiRequest,
   res: NextApiResponse
-) {
+): void {
   const { socket_id } = req.body as { socket_id: string };
   const { user_id } = req.headers;
 

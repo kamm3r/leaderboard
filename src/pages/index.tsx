@@ -1,10 +1,13 @@
-import clsx from "clsx";
 import { type NextPage } from "next";
+// import Image from "next/image";
 import { signIn, signOut, useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
 import Head from "next/head";
 import Link from "next/link";
 import React, { useState } from "react";
+import { useTRPCForm } from "trpc-form";
+import * as portals from "react-reverse-portal";
+import clsx from "clsx";
 import { FaDiscord } from "react-icons/fa";
 import {
   HiOutlineClipboardCheck,
@@ -20,8 +23,6 @@ import {
   HiSortDescending,
   HiX,
 } from "react-icons/hi";
-import * as portals from "react-reverse-portal";
-import { useTRPCForm } from "trpc-form";
 
 import { AutoAnimate } from "../components/auto-animate";
 import Button from "../components/button";
@@ -30,11 +31,10 @@ import { TextInput } from "../components/text-input";
 import {
   addAthleteInput,
   addAttemptInput,
-} from "../shared/add-athlete-validator";
+} from "../server/api/router/athletes";
 import { api, type RouterOutputs } from "../utils/api";
 import { PusherProvider } from "../utils/pusher";
 import { useMeetNameStore } from "../utils/store";
-// import Image from "next/image";
 
 const AddAthlete: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const utils = api.useContext();
