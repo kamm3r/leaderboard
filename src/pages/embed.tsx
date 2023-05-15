@@ -15,9 +15,9 @@ const BrowserEmbedView: React.FC<CompProps> = () => {
   const meetName = useMeetNameStore((state) => state.meet);
   const { data, isLoading } = api.athletes.getAll.useQuery();
   const {
-    mutate: pinAthleteMutation,
+    //mutate: pinAthleteMutation,
     variables: currentlyPinned,
-    reset,
+    //reset,
   } = api.athletes.pin.useMutation();
   const pinndedId = currentlyPinned?.id ?? data?.find((a) => a.id)?.id;
 
@@ -28,14 +28,14 @@ const BrowserEmbedView: React.FC<CompProps> = () => {
       <Head>
         <title>Embed</title>
       </Head>
-      {isLoading ? (
+      {isLoading || !data ? (
         <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
       ) : (
         <Board
           data={data}
           status={"Final"}
           meetName={meetName}
-          pinned={pinndedId}
+          pinned={pinndedId ? pinndedId : ''}
         />
       )}
     </div>

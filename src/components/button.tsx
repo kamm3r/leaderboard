@@ -95,7 +95,7 @@ export const getButtonClasses = (
   style: ButtonStyle = {},
   ...rest: string[]
 ): string => {
-  const { disabled, size = "base", variant = "secondary" } = style;
+  const { disabled = false, size = "base", variant = "secondary" } = style;
   return clsx(
     BUTTON_CLASSES,
     disabled && "pointer-events-none",
@@ -123,7 +123,7 @@ const ButtonContent: React.FC<ButtonContentType> = ({
   return (
     <>
       {loading && (
-        <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
           <LoadingSpinner className="h-5 w-5" />
         </span>
       )}
@@ -165,7 +165,13 @@ export const ButtonLink = React.forwardRef<
   HTMLAnchorElement,
   ButtonProps & HTMLAnchorProps
 >((props, ref): JSX.Element => {
-  const { className = "", disabled, size, variant, ...rest } = props;
+  const {
+    className = "",
+    disabled = false,
+    size = "base",
+    variant = "primary",
+    ...rest
+  } = props;
   return (
     <a
       className={getButtonClasses({ disabled, size, variant }, className)}
@@ -188,7 +194,13 @@ export const Button = React.forwardRef<
   HTMLButtonElement,
   ButtonProps & HTMLButtonProps
 >((props, ref): JSX.Element => {
-  const { className = "", disabled, size, variant, ...rest } = props;
+  const {
+    className = "",
+    disabled = false,
+    size = "base",
+    variant = "primary",
+    ...rest
+  } = props;
   return (
     <button
       className={getButtonClasses({ disabled, size, variant }, className)}
