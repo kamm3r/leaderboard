@@ -34,7 +34,7 @@ import {
 import { api, type RouterOutputs } from "../utils/api";
 import { PusherProvider } from "../utils/pusher";
 import { useMeetNameStore } from "../utils/store";
-import Image from "next/image";
+// import Image from "next/image";
 
 const AddAthlete: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const utils = api.useContext();
@@ -823,14 +823,14 @@ const AthleteView = () => {
 };
 
 function AthleteViewWrapper() {
-  //   const { data: sessionData } = useSession();
+  const { data: sessionData } = useSession();
 
-  //   if (!sessionData?.user.id) return null;
+  if (!sessionData?.user.id) return null;
 
   return (
-    // <PusherProvider slug={`user-${sessionData.user.id}`}>
-    <AthleteView />
-    // </PusherProvider>
+    <PusherProvider slug={`user-${sessionData.user.id}`}>
+      <AthleteView />
+    </PusherProvider>
   );
 }
 
@@ -870,6 +870,7 @@ const NavButtons = () => {
     <nav className="flex gap-6">
       <h1 className="flex items-center gap-2 text-base font-medium">
         {sessionData?.user.image && (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={sessionData.user.image}
             alt="pro pic"

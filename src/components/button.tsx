@@ -29,11 +29,11 @@ type ButtonSize = "xs" | "sm" | "base" | "lg" | "xl" | "2xl";
 
 type ButtonIconPosition = "start" | "end";
 
-interface ButtonStyle {
+type ButtonStyle = {
   disabled?: boolean;
   size?: ButtonSize;
   variant?: ButtonVariant;
-}
+};
 
 export type ButtonProps = {
   icon?: React.ReactElement;
@@ -105,13 +105,13 @@ export const getButtonClasses = (
   );
 };
 
-interface ButtonContentType {
+type ButtonContentType = {
   loading?: boolean;
   size?: ButtonSize;
   icon?: React.ReactElement;
   iconPosition?: ButtonIconPosition;
   children?: React.ReactNode;
-}
+};
 
 const ButtonContent: React.FC<ButtonContentType> = ({
   loading,

@@ -6,17 +6,6 @@ import Pusher, {
 } from "pusher-js";
 import { create, type StoreApi, useStore } from "zustand";
 
-const pusher_key = process.env["NEXT_PUBLIC_PUSHER_APP_KEY"];
-const pusher_server_host = process.env["NEXT_PUBLIC_PUSHER_SERVER_HOST"];
-const pusher_server_port = parseInt(
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  process.env["NEXT_PUBLIC_PUSHER_SERVER_PORT"]!,
-  10
-);
-const pusher_server_tls =
-  process.env["NEXT_PUBLIC_PUSHER_SERVER_TLS"] === "true";
-const pusher_server_cluster = process.env["NEXT_PUBLIC_PUSHER_SERVER_CLUSTER"];
-
 type MembersType = Pick<Members, "members">;
 
 type PusherStore = {
@@ -30,23 +19,34 @@ type PusherState = StoreApi<PusherStore> extends { getState: () => infer T }
   ? T
   : never;
 
-const createPusherStore = (slug: string) => {
+type MemberDict = Record<string, MembersType>;
+
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+const pusher_key = process.env["NEXT_PUBLIC_PUSHER_APP_KEY"]!;
+const pusher_server_host =
+  process.env["NEXT_PUBLIC_PUSHER_SERVER_HOST"] ?? "localhost";
+const pusher_server_port = parseInt(
+  process.env["NEXT_PUBLIC_PUSHER_SERVER_PORT"] ?? "6001",
+  10
+);
+const pusher_server_tls =
+  process.env["NEXT_PUBLIC_PUSHER_SERVER_TLS"] === "true";
+const pusher_server_cluster = process.env["NEXT_PUBLIC_PUSHER_CLUSTER"] ?? "eu";
+
+function createPusher(slug: string): Omit<PusherStore, "members"> {
   let pusher: Pusher;
   if (Pusher.instances.length) {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    pusher = Pusher.instances[0]!;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/non-nullable-type-assertion-style
+    pusher = Pusher.instances[0] as Pusher;
     pusher.connect();
   } else {
     const randomUserId = `random-user-id:${Math.random().toFixed(7)}`;
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    pusher = new Pusher(pusher_key!, {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      wsHost: pusher_server_host!,
+    pusher = new Pusher(pusher_key, {
+      wsHost: pusher_server_host,
       wsPort: pusher_server_port,
       enabledTransports: pusher_server_tls ? ["ws", "wss"] : ["ws"],
       forceTLS: pusher_server_tls,
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      cluster: pusher_server_cluster!,
+      cluster: pusher_server_cluster,
       disableStats: true,
       authEndpoint: "/api/pusher/auth-channel",
       auth: {
@@ -61,6 +61,11 @@ const createPusherStore = (slug: string) => {
     `presence-${slug}`
   ) as PresenceChannel;
 
+  return { pusher, channel, presenceChannel };
+}
+
+function createPusherStore(slug: string) {
+  const { pusher, channel, presenceChannel } = createPusher(slug);
   const store = create<PusherStore>()(() => ({
     pusher,
     channel,
@@ -68,24 +73,13 @@ const createPusherStore = (slug: string) => {
     members: new Map<string, MembersType>(),
   }));
 
-  console.log(
-    "presenceChannel members lookup",
-    presenceChannel.members.members
-  );
-  type MemberDict = Record<string, MembersType>;
-  console.log(
-    "test",
-    new Map<string, MembersType>(
-      Object.entries(presenceChannel.members.members as MemberDict)
-    )
-  );
-
-  const updateMembers = () => {
+  const updateMembers = (): void => {
     store.setState(() => ({
       members: new Map(
         Object.entries(presenceChannel.members.members as MemberDict)
       ),
     }));
+    console.log("members lookup", presenceChannel.members.members);
   };
 
   presenceChannel.bind("pusher:subscription_succeeded", updateMembers);
@@ -93,7 +87,7 @@ const createPusherStore = (slug: string) => {
   presenceChannel.bind("pusher:member_removed", updateMembers);
 
   return store;
-};
+}
 
 const PusherContext = createContext<StoreApi<PusherStore> | undefined>(
   undefined
@@ -109,30 +103,42 @@ function usePusherStore<StateSlice = PusherState>(
   return useStore(store, selector, equalityFn);
 }
 
-export const PusherProvider: React.FC<
-  React.PropsWithChildren<{ slug: string }>
-> = ({ slug, children }) => {
+export function PusherProvider({
+  slug,
+  children,
+}: {
+  slug: string;
+  children: React.ReactNode;
+}) {
   const storeRef = useRef<ReturnType<typeof createPusherStore>>();
   useEffect(() => {
     storeRef.current = createPusherStore(slug);
 
     return () => {
       const pusher = storeRef.current?.getState().pusher;
+      console.log("disconnecting pusher and destroying store", pusher);
+      console.log(
+        "(Expect a warning in terminal after this, React Dev Mode and all)"
+      );
       pusher?.disconnect();
     };
   }, [slug]);
+
+  if (!storeRef.current) {
+    return null;
+  }
 
   return (
     <PusherContext.Provider value={storeRef.current}>
       {children}
     </PusherContext.Provider>
   );
-};
+}
 
 export function useSubscribeToEvent<MessageType>(
   eventName: string,
   callback: (data: MessageType) => void
-) {
+): void {
   const channel = usePusherStore((state) => state.channel);
   const stableCallback = React.useRef(callback);
 
@@ -152,5 +158,5 @@ export function useSubscribeToEvent<MessageType>(
 }
 
 export function useCurrentMemberCount() {
-  return usePusherStore((state) => state);
+  return usePusherStore((state) => state.members.size);
 }

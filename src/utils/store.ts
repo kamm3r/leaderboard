@@ -1,10 +1,11 @@
+// TODO:remove this file
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 
-interface Some {
+type Some = {
   deez: number;
   increase: (by: number) => void;
-}
+};
 
 export const useSomeStore = create<Some>()(
   devtools(
@@ -20,11 +21,11 @@ export const useSomeStore = create<Some>()(
   )
 );
 
-interface MeetName {
+type MeetName = {
   meet: string;
   setNewMeetName: (meet: string) => void;
   addMeetName: () => void;
-}
+};
 
 export const useMeetNameStore = create<MeetName>()(
   devtools(

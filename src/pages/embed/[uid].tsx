@@ -1,28 +1,15 @@
 import dynamic from "next/dynamic";
 import Head from "next/head";
-// import { useRouter } from "next/router";
 import { api } from "../../utils/api";
 import { PusherProvider } from "../../utils/pusher";
 import { useMeetNameStore } from "../../utils/store";
 import { Board } from "../index";
 
-type CompProps = {
-  userId?: string;
-};
-
-const BrowserEmbedView: React.FC<CompProps> = () => {
-  // const latestMessage = useLatestPusherMessage(userId);
-
+const BrowserEmbedViewCore = () => {
   const meetName = useMeetNameStore((state) => state.meet);
   const { data, isLoading } = api.athletes.getAll.useQuery();
-  const {
-    // mutate: pinAthleteMutation,
-    variables: currentlyPinned,
-    // reset,
-  } = api.athletes.pin.useMutation();
+  const { variables: currentlyPinned } = api.athletes.pin.useMutation();
   const pinndedId = currentlyPinned?.id ?? data?.find((a) => a.id)?.id;
-
-  // if (!latestMessage) return null;
   return (
     <div className="flex h-screen w-screen items-center justify-center">
       <Head>
@@ -42,21 +29,18 @@ const BrowserEmbedView: React.FC<CompProps> = () => {
   );
 };
 
-const LazyEmbedView = dynamic(() => Promise.resolve(BrowserEmbedView), {
+const LazyEmbedView = dynamic(() => Promise.resolve(BrowserEmbedViewCore), {
   ssr: false,
 });
 
-const BrowserEmbedQuestionView = () => {
-  // const { query } = useRouter();
-  // if (!query.uid || typeof query.uid !== "string") {
-  //   return null;
-  // }
+const BrowserEmbedView = ({ userId }: { userId?: string }) => {
+  if (!userId) return null;
 
   return (
-    <PusherProvider slug={" "}>
+    <PusherProvider slug={`user-${userId}`}>
       <LazyEmbedView />
     </PusherProvider>
   );
 };
 
-export default BrowserEmbedQuestionView;
+export default BrowserEmbedView;

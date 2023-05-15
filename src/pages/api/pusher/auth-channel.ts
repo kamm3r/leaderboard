@@ -20,7 +20,7 @@ export default function pusherAuthChannel(
   const auth = pusherServerClient.authorizeChannel(socket_id, channel_name, {
     user_id,
     user_info: {
-      name: "oaiwmeroauwhero;aijhwer",
+      name: "deez",
     },
   });
   res.send(auth);
