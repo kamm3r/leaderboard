@@ -1,12 +1,10 @@
 import { createNextApiHandler } from "@trpc/server/adapters/next";
 
-import { env } from "../../../env.mjs";
-import { createTRPCContext } from "../../../server/api/trpc";
-import { appRouter } from "../../../server/api/root";
+import { env } from "~/env.mjs";
+import { appRouter } from "~/server/api/root";
+import { createTRPCContext } from "~/server/api/trpc";
 
 // export API handler
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-//@ts-expect-error
 export default createNextApiHandler({
   router: appRouter,
   createContext: createTRPCContext,
@@ -19,3 +17,4 @@ export default createNextApiHandler({
         }
       : undefined,
 });
+

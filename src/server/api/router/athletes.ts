@@ -1,9 +1,8 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { prisma } from "../../db";
+import { pusherServerClient } from "~/server/pusher";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
-import { pusherServerClient } from "../../pusher";
 
 export const addAthleteInput = z.object({
   firstName: z.string(),
@@ -25,8 +24,8 @@ export type AddAttemptInputType = z.infer<typeof addAttemptInput>;
 export const athletesRouter = createTRPCRouter({
   addAthlete: publicProcedure
     .input(addAthleteInput)
-    .mutation(async ({ input }) => {
-      const addAthlete = await prisma.athlete.create({
+    .mutation(async ({ ctx, input }) => {
+      const addAthlete = await ctx.athlete.create({
         data: {
           name: input.firstName + " " + input.lastName,
           club: input.club,
@@ -37,8 +36,8 @@ export const athletesRouter = createTRPCRouter({
 
       return addAthlete;
     }),
-  getAll: publicProcedure.query(async () => {
-    const results = await prisma.athlete.findMany({
+  getAll: publicProcedure.query(async ({ctx}) => {
+    const results = await ctx.athlete.findMany({
       include: { attempts: true },
     });
     return results;
@@ -49,16 +48,16 @@ export const athletesRouter = createTRPCRouter({
         id: z.string().cuid(),
       })
     )
-    .query(async ({ input }) => {
-      const results = await prisma.athlete.findUnique({
+    .query(async ({ctx, input }) => {
+      const results = await ctx.athlete.findUnique({
         where: { id: input.id },
       });
       return results;
     }),
   addAttempt: publicProcedure
     .input(addAttemptInput)
-    .mutation(async ({ input }) => {
-      const attempt = await prisma.attempt.create({
+    .mutation(async ({ ctx,input }) => {
+      const attempt = await ctx.attempt.create({
         data: { ...input },
         select: { athleteId: true },
       });
@@ -70,8 +69,8 @@ export const athletesRouter = createTRPCRouter({
         id: z.string().cuid(),
       })
     )
-    .mutation(async ({ input }) => {
-      const edit = await prisma.athlete.findFirst({
+    .mutation(async ({ ctx,input }) => {
+      const edit = await ctx.athlete.findFirst({
         where: { id: input.id },
       });
       if (!edit) {
@@ -85,7 +84,7 @@ export const athletesRouter = createTRPCRouter({
   pin: protectedProcedure
     .input(z.object({ id: z.string().cuid() }))
     .mutation(async ({ ctx, input }) => {
-      const athlete = await prisma.athlete.findFirst({
+      const athlete = await ctx.athlete.findFirst({
         where: { id: input.id },
       });
       if (athlete?.id !== ctx.session.user.id) {
@@ -105,20 +104,20 @@ export const athletesRouter = createTRPCRouter({
         id: z.string().cuid(),
       })
     )
-    .mutation(async ({ input }) => {
-      const removeAttempts = prisma.attempt.deleteMany({
+    .mutation(async ({ctx, input }) => {
+      const removeAttempts = ctx.attempt.deleteMany({
         where: { athleteId: input.id },
       });
-      const removeAthlete = prisma.athlete.delete({
+      const removeAthlete = ctx.athlete.delete({
         where: { id: input.id },
       });
-      const remove = await prisma.$transaction([removeAttempts, removeAthlete]);
+      const remove = await ctx.$transaction([removeAttempts, removeAthlete]);
       return remove;
     }),
-  deleteAll: publicProcedure.mutation(async () => {
-    const removeAttempts = prisma.attempt.deleteMany();
-    const removeAthletes = prisma.athlete.deleteMany();
-    const remove = await prisma.$transaction([removeAttempts, removeAthletes]);
+  deleteAll: publicProcedure.mutation(async ({ctx}) => {
+    const removeAttempts = ctx.attempt.deleteMany();
+    const removeAthletes = ctx.athlete.deleteMany();
+    const remove = await ctx.$transaction([removeAttempts, removeAthletes]);
     return remove;
   }),
 });

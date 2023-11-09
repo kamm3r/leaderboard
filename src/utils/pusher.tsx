@@ -22,16 +22,16 @@ type PusherState = StoreApi<PusherStore> extends { getState: () => infer T }
 type MemberDict = Record<string, MembersType>;
 
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-const pusher_key = process.env["NEXT_PUBLIC_PUSHER_APP_KEY"]!;
+const pusher_key = process.env.PUSHER_APP_KEY!;
 const pusher_server_host =
-  process.env["NEXT_PUBLIC_PUSHER_SERVER_HOST"] ?? "localhost";
+  process.env.PUSHER_SERVER_HOST ?? "localhost";
 const pusher_server_port = parseInt(
-  process.env["NEXT_PUBLIC_PUSHER_SERVER_PORT"] ?? "6001",
+  process.env.PUSHER_SERVER_PORT ?? "6001",
   10
 );
 const pusher_server_tls =
-  process.env["NEXT_PUBLIC_PUSHER_SERVER_TLS"] === "true";
-const pusher_server_cluster = process.env["NEXT_PUBLIC_PUSHER_CLUSTER"] ?? "eu";
+  process.env.PUSHER_SERVER_TLS === "true";
+const pusher_server_cluster = process.env.PUSHER_CLUSTER ?? "eu";
 
 function createPusher(slug: string): Omit<PusherStore, "members"> {
   let pusher: Pusher;

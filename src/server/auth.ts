@@ -1,13 +1,14 @@
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { type GetServerSidePropsContext } from "next";
 import {
   getServerSession,
-  type NextAuthOptions,
   type DefaultSession,
+  type NextAuthOptions,
 } from "next-auth";
 import DiscordProvider from "next-auth/providers/discord";
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import { prisma } from "./db";
-import { env } from "../env.mjs";
+
+import { env } from "~/env.mjs";
+import { db } from "~/server/db";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -17,11 +18,11 @@ import { env } from "../env.mjs";
  */
 declare module "next-auth" {
   interface Session extends DefaultSession {
-    user: {
+    user: DefaultSession["user"] & {
       id: string;
       // ...other properties
       // role: UserRole;
-    } & DefaultSession["user"];
+    };
   }
 
   // interface User {
@@ -45,7 +46,7 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   },
-  adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(db),
   providers: [
     DiscordProvider({
       clientId: env.DISCORD_CLIENT_ID,
@@ -74,3 +75,4 @@ export const getServerAuthSession = (ctx: {
 }) => {
   return getServerSession(ctx.req, ctx.res, authOptions);
 };
+
