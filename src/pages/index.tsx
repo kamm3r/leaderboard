@@ -43,7 +43,7 @@ const AddAthlete: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     mutation: api.athletes.addAthlete,
     validator: addAthleteInput,
     onSuccess: () => {
-      void utils.athletes.invalidate();
+      utils.athletes.invalidate();
       onClose();
     },
     onSubmit: async () => {
