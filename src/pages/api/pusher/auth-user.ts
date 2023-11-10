@@ -1,9 +1,9 @@
-import { NextApiRequest, NextApiResponse } from "next";
-import { pusherServerClient } from "../../../server/pusher";
+import { type NextApiRequest, type NextApiResponse } from "next";
+import { pusherServerClient } from "~/server/pusher";
 
 export default function pusherAuthUserEndpoint(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ): void {
   const { socket_id } = req.body as { socket_id: string };
   const { user_id } = req.headers;

@@ -1,9 +1,9 @@
 import dynamic from "next/dynamic";
 import Head from "next/head";
-import { api } from "../../utils/api";
-import { PusherProvider } from "../../utils/pusher";
-import { useMeetNameStore } from "../../utils/store";
-import { Board } from "../index";
+import { Board } from "~/pages";
+import { api } from "~/utils/api";
+import { PusherProvider } from "~/utils/pusher";
+import { useMeetNameStore } from "~/utils/store";
 
 const BrowserEmbedViewCore = () => {
   const meetName = useMeetNameStore((state) => state.meet);

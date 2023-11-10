@@ -37,13 +37,13 @@ import { PusherProvider } from "../utils/pusher";
 import { useMeetNameStore } from "../utils/store";
 
 const AddAthlete: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-  const utils = api.useContext();
+  const utils = api.useUtils();
 
   const form = useTRPCForm({
     mutation: api.athletes.addAthlete,
     validator: addAthleteInput,
-    onSuccess: () => {
-      utils.athletes.invalidate();
+    onSuccess: async () => {
+      await utils.athletes.invalidate();
       onClose();
     },
     onSubmit: async () => {
@@ -196,13 +196,13 @@ const AddAttempt: React.FC<{
   onClose: () => void;
   athleteId?: string;
 }> = ({ onClose, athleteId }) => {
-  const utils = api.useContext();
+  const utils = api.useUtils();
 
   const form = useTRPCForm({
     mutation: api.athletes.addAttempt,
     validator: addAttemptInput,
-    onSuccess: () => {
-      void utils.athletes.invalidate();
+    onSuccess: async () => {
+      await utils.athletes.invalidate();
       onClose();
     },
     onSubmit: async () => {
@@ -318,7 +318,7 @@ export const Board: React.FC<BoardType> = ({
                 <span>
                   {a.attempts.length > 0
                     ? Math.max(
-                        ...a.attempts.map((cock) => parseFloat(cock.attempt1))
+                        ...a.attempts.map((cock) => parseFloat(cock.attempt1)),
                       )
                     : "-"}
                 </span>
@@ -326,7 +326,7 @@ export const Board: React.FC<BoardType> = ({
               <ul
                 className={clsx(
                   "ml-1  flex-[1_1_100%] bg-gray-300 text-black",
-                  pinned === a.id ? "flex" : "hidden"
+                  pinned === a.id ? "flex" : "hidden",
                 )}
               >
                 {/* bg-cyan-300/50 is for highest value */}
@@ -698,7 +698,7 @@ const AthleteView = () => {
                 <button
                   className={clsx(
                     "inline-flex rounded-lg px-4 py-2 text-sm",
-                    tab === "1" && "bg-neutral-700"
+                    tab === "1" && "bg-neutral-700",
                   )}
                   onClick={() => setTab("1")}
                 >
@@ -707,7 +707,7 @@ const AthleteView = () => {
                 <button
                   className={clsx(
                     "inline-flex rounded-lg px-4 py-2 text-sm",
-                    tab === "2" && "bg-neutral-700"
+                    tab === "2" && "bg-neutral-700",
                   )}
                   onClick={() => setTab("2")}
                 >
@@ -716,7 +716,7 @@ const AthleteView = () => {
                 <button
                   className={clsx(
                     "inline-flex rounded-lg px-4 py-2 text-sm",
-                    tab === "3" && "bg-neutral-700"
+                    tab === "3" && "bg-neutral-700",
                   )}
                   onClick={() => setTab("3")}
                 >

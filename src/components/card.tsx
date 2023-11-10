@@ -8,7 +8,7 @@ export const Card: React.FC<
     <div
       className={clsx(
         "rounded border border-neutral-900 bg-neutral-800 shadow",
-        className
+        className,
       )}
       {...rest}
     ></div>

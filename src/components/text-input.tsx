@@ -20,7 +20,7 @@ export const TextInput = React.forwardRef<
     <div
       className={classNames(
         "flex rounded-md border border-gray-700 px-1 shadow-sm focus-within:border-neutral-500 focus-within:ring-1 focus-within:ring-neutral-500",
-        className
+        className,
       )}
     >
       {prefixEl && (

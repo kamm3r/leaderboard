@@ -4,12 +4,13 @@ import Pusher, {
   type PresenceChannel,
   type Channel,
 } from "pusher-js";
-import { create, type StoreApi, useStore } from "zustand";
+import { useStoreWithEqualityFn } from "zustand/traditional";
+import { createStore, type StoreApi } from "zustand/vanilla";
 
 type MembersType = Pick<Members, "members">;
 
 type PusherStore = {
-  pusher: Pusher;
+  pusherClient: Pusher;
   channel: Channel;
   presenceChannel: PresenceChannel;
   members: Map<string, MembersType>;
@@ -21,27 +22,23 @@ type PusherState = StoreApi<PusherStore> extends { getState: () => infer T }
 
 type MemberDict = Record<string, MembersType>;
 
-// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-const pusher_key = process.env.PUSHER_APP_KEY!;
-const pusher_server_host =
-  process.env.PUSHER_SERVER_HOST ?? "localhost";
+const pusher_key = process.env.NEXT_PUBLIC_PUSHER_APP_KEY!;
+const pusher_server_host = process.env.NEXT_PUBLIC_PUSHER_SERVER_HOST!;
 const pusher_server_port = parseInt(
-  process.env.PUSHER_SERVER_PORT ?? "6001",
-  10
+  process.env.NEXT_PUBLIC_PUSHER_SERVER_PORT!,
+  10,
 );
-const pusher_server_tls =
-  process.env.PUSHER_SERVER_TLS === "true";
-const pusher_server_cluster = process.env.PUSHER_CLUSTER ?? "eu";
+const pusher_server_tls = process.env.NEXT_PUBLIC_PUSHER_SERVER_TLS === "true";
+const pusher_server_cluster = process.env.NEXT_PUBLIC_PUSHER_SERVER_CLUSTER!;
 
-function createPusher(slug: string): Omit<PusherStore, "members"> {
-  let pusher: Pusher;
+function createPusherStore(slug: string): StoreApi<PusherStore> {
+  let pusherClient: Pusher;
   if (Pusher.instances.length) {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/non-nullable-type-assertion-style
-    pusher = Pusher.instances[0] as Pusher;
-    pusher.connect();
+    pusherClient = Pusher.instances[0]!;
+    pusherClient.connect();
   } else {
     const randomUserId = `random-user-id:${Math.random().toFixed(7)}`;
-    pusher = new Pusher(pusher_key, {
+    pusherClient = new Pusher(pusher_key, {
       wsHost: pusher_server_host,
       wsPort: pusher_server_port,
       enabledTransports: pusher_server_tls ? ["ws", "wss"] : ["ws"],
@@ -55,19 +52,14 @@ function createPusher(slug: string): Omit<PusherStore, "members"> {
     });
   }
 
-  const channel = pusher.subscribe(slug);
+  const channel = pusherClient.subscribe(slug);
 
-  const presenceChannel = pusher.subscribe(
-    `presence-${slug}`
+  const presenceChannel = pusherClient.subscribe(
+    `presence-${slug}`,
   ) as PresenceChannel;
 
-  return { pusher, channel, presenceChannel };
-}
-
-function createPusherStore(slug: string) {
-  const { pusher, channel, presenceChannel } = createPusher(slug);
-  const store = create<PusherStore>()(() => ({
-    pusher,
+  const store = createStore<PusherStore>()(() => ({
+    pusherClient,
     channel,
     presenceChannel,
     members: new Map<string, MembersType>(),
@@ -76,7 +68,7 @@ function createPusherStore(slug: string) {
   const updateMembers = (): void => {
     store.setState(() => ({
       members: new Map(
-        Object.entries(presenceChannel.members.members as MemberDict)
+        Object.entries(presenceChannel.members.members as MemberDict),
       ),
     }));
     console.log("members lookup", presenceChannel.members.members);
@@ -89,18 +81,18 @@ function createPusherStore(slug: string) {
   return store;
 }
 
-const PusherContext = createContext<StoreApi<PusherStore> | undefined>(
-  undefined
-);
+const PusherContext = createContext<ReturnType<
+  typeof createPusherStore
+> | null>(null);
 function usePusherStore<StateSlice = PusherState>(
   selector: (state: PusherState) => StateSlice,
-  equalityFn?: (left: StateSlice, right: StateSlice) => boolean
+  equalityFn?: (left: StateSlice, right: StateSlice) => boolean,
 ): StateSlice {
   const store = useContext(PusherContext);
   if (!store) {
     throw new Error("Missing PusherContext.Provider in the tree");
   }
-  return useStore(store, selector, equalityFn);
+  return useStoreWithEqualityFn(store, selector, equalityFn);
 }
 
 export function PusherProvider({
@@ -115,10 +107,10 @@ export function PusherProvider({
     storeRef.current = createPusherStore(slug);
 
     return () => {
-      const pusher = storeRef.current?.getState().pusher;
+      const pusher = storeRef.current?.getState().pusherClient;
       console.log("disconnecting pusher and destroying store", pusher);
       console.log(
-        "(Expect a warning in terminal after this, React Dev Mode and all)"
+        "(Expect a warning in terminal after this, React Dev Mode and all)",
       );
       pusher?.disconnect();
     };
@@ -137,7 +129,7 @@ export function PusherProvider({
 
 export function useSubscribeToEvent<MessageType>(
   eventName: string,
-  callback: (data: MessageType) => void
+  callback: (data: MessageType) => void,
 ): void {
   const channel = usePusherStore((state) => state.channel);
   const stableCallback = React.useRef(callback);

@@ -1,9 +1,9 @@
-import { NextApiRequest, NextApiResponse } from "next";
-import { pusherServerClient } from "../../../server/pusher";
+import { type NextApiRequest, type NextApiResponse } from "next";
+import { pusherServerClient } from "~/server/pusher";
 
 export default function pusherAuthChannel(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ): void {
   const { channel_name, socket_id } = req.body as {
     channel_name: string;

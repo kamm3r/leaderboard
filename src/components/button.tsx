@@ -101,7 +101,7 @@ export const getButtonClasses = (
     disabled && "pointer-events-none",
     BUTTON_SIZES[size],
     BUTTON_VARIANTS[variant],
-    ...rest
+    ...rest,
   );
 };
 
@@ -133,7 +133,7 @@ const ButtonContent: React.FC<ButtonContentType> = ({
             { invisible: loading },
             ICON_SIZE_CLASSES[size],
             ICON_START_CLASSES[size],
-            "flex items-center"
+            "flex items-center",
           )}
         >
           {icon}
@@ -146,7 +146,7 @@ const ButtonContent: React.FC<ButtonContentType> = ({
             { invisible: loading },
             ICON_SIZE_CLASSES[size],
             ICON_END_CLASSES[size],
-            "flex items-center"
+            "flex items-center",
           )}
         >
           {icon}
