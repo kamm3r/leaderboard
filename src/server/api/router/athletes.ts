@@ -125,5 +125,3 @@ export const athletesRouter = createTRPCRouter({
     return remove;
   }),
 });
-
-export type resultsRouter = typeof athletesRouter;

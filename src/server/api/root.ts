@@ -1,5 +1,4 @@
 import { athletesRouter } from "~/server/api/router/athletes";
-import { authRouter } from "~/server/api/router/auth";
 import { createTRPCRouter } from "~/server/api/trpc";
 
 /**
@@ -9,7 +8,6 @@ import { createTRPCRouter } from "~/server/api/trpc";
  */
 export const appRouter = createTRPCRouter({
   athletes: athletesRouter,
-  auth: authRouter,
 });
 
 // export type definition of API
