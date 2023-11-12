@@ -1,40 +1,50 @@
-import { type NextPage } from "next";
-// import Image from "next/image";
+import clsx from "clsx";
+import {
+  ClipboardCheckIcon,
+  ClipboardCopyIcon,
+  EyeIcon,
+  EyeOffIcon,
+  Loader2Icon,
+  LogOutIcon,
+  PlusIcon,
+  SortAscIcon,
+  SortDescIcon,
+  Trash2Icon,
+  UserPlusIcon,
+  XIcon,
+} from "lucide-react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
 import Head from "next/head";
+import Image from "next/image";
 import Link from "next/link";
+import { useTRPCForm } from "node_modules/trpc-form/dist";
 import React, { useState } from "react";
-import { useTRPCForm } from "trpc-form";
-import * as portals from "react-reverse-portal";
-import clsx from "clsx";
 import { FaDiscord } from "react-icons/fa";
-import {
-  HiOutlineClipboardCheck,
-  HiOutlineClipboardCopy,
-  HiOutlineEye,
-  HiOutlineEyeOff,
-  HiOutlineLogout,
-  HiOutlinePlus,
-  HiOutlineTrash,
-  HiOutlineUserAdd,
-  HiPlus,
-  HiSortAscending,
-  HiSortDescending,
-  HiX,
-} from "react-icons/hi";
+import * as portals from "react-reverse-portal";
+import { z } from "zod";
+import { AutoAnimate } from "~/components/auto-animate";
+import { Card } from "~/components/card";
+import { Input } from "~/@/components/ui/input";
+import { api, type RouterOutputs } from "~/utils/api";
+import { PusherProvider } from "~/utils/pusher";
+import { useMeetNameStore } from "~/utils/store";
+import { Label } from "~/@/components/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "~/@/components/ui/avatar";
+import { Button } from "~/@/components/ui/button";
 
-import { AutoAnimate } from "../components/auto-animate";
-import Button from "../components/button";
-import { Card } from "../components/card";
-import { TextInput } from "../components/text-input";
-import {
-  addAthleteInput,
-  addAttemptInput,
-} from "../server/api/router/athletes";
-import { api, type RouterOutputs } from "../utils/api";
-import { PusherProvider } from "../utils/pusher";
-import { useMeetNameStore } from "../utils/store";
+const addAthleteInput = z.object({
+  firstName: z.string(),
+  lastName: z.string(),
+  club: z.string(),
+  pb: z.string().optional().default(""),
+  sb: z.string().optional().default(""),
+});
+
+const addAttemptInput = z.object({
+  attempt1: z.string(),
+  athleteId: z.string().cuid(),
+});
 
 const AddAthlete: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const utils = api.useUtils();
@@ -68,7 +78,7 @@ const AddAthlete: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         >
           <header className="flex items-center justify-between px-6 py-4">
             <section className="flex items-center gap-4">
-              <HiOutlineUserAdd className="text-xl" />
+              <UserPlusIcon className="text-xl" />
               <h3 className="flex-1 text-xl font-bold">New Athlete</h3>
             </section>
             <Button
@@ -77,17 +87,17 @@ const AddAthlete: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               className="rounded-full !p-2"
               onClick={onClose}
             >
-              <HiX className="text-xl" />
+              <XIcon className="text-xl" />
             </Button>
           </header>
           <menu className="grid grid-cols-1 justify-items-start gap-6 overflow-y-auto bg-neutral-700/50 px-6 py-4 md:grid-cols-2">
             <li className="flex flex-col">
-              <label
+              <Label
                 className="block text-sm font-medium"
                 htmlFor={form.firstName.id()}
               >
                 First name:
-              </label>
+              </Label>
               <input
                 className="mt-1 rounded-md border-gray-300 bg-neutral-900/50 px-3 py-2 focus:border-neutral-500 focus:ring-neutral-500 sm:text-sm"
                 type="text"
@@ -99,12 +109,12 @@ const AddAthlete: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               ))}
             </li>
             <li className="flex flex-col">
-              <label
+              <Label
                 className="block text-sm font-medium"
                 htmlFor={form.lastName.id()}
               >
                 Last name:
-              </label>
+              </Label>
               <input
                 className="mt-1 rounded border-gray-300 bg-neutral-900/50 px-3 py-2 focus:border-neutral-500 focus:ring-neutral-500 sm:text-sm"
                 type="text"
@@ -116,12 +126,12 @@ const AddAthlete: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               ))}
             </li>
             <li className="flex flex-col">
-              <label
+              <Label
                 className="block text-sm font-medium"
                 htmlFor={form.club.id()}
               >
                 Club name:
-              </label>
+              </Label>
               <input
                 className="mt-1 rounded border-gray-300 bg-neutral-900/50 px-3 py-2 focus:border-neutral-500 focus:ring-neutral-500 sm:text-sm"
                 type="text"
@@ -134,12 +144,12 @@ const AddAthlete: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             </li>
             <li className="flex flex-wrap gap-4">
               <div className="flex w-1/3 flex-col">
-                <label
+                <Label
                   className="block text-sm font-medium"
                   htmlFor={form.pb?.id()}
                 >
                   PB:
-                </label>
+                </Label>
                 <input
                   className="mt-1 rounded border-gray-300 bg-neutral-900/50 px-3 py-2 focus:border-neutral-500 focus:ring-neutral-500 sm:text-sm"
                   name={form.pb?.name()}
@@ -148,12 +158,12 @@ const AddAthlete: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               </div>
 
               <div className="flex w-1/3 flex-col">
-                <label
+                <Label
                   className="block text-sm font-medium"
                   htmlFor={form.sb?.id()}
                 >
                   SB:
-                </label>
+                </Label>
                 <input
                   className="mt-1 rounded border-gray-300 bg-neutral-900/50 px-3 py-2 focus:border-neutral-500 focus:ring-neutral-500 sm:text-sm"
                   name={form.sb?.name()}
@@ -167,20 +177,13 @@ const AddAthlete: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           </menu>
           <footer className="flex flex-wrap items-center justify-center px-6 py-4">
             <menu className="flex flex-1 flex-wrap justify-end gap-4 pl-0">
-              <Button
-                type="button"
-                onClick={onClose}
-                size="lg"
-                variant="danger"
-              >
+              <Button type="button" onClick={onClose} variant="destructive">
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={form.isSubmitting}
                 loading={form.isSubmitting}
-                size="lg"
-                variant="primary"
               >
                 Confirm
               </Button>
@@ -234,15 +237,15 @@ const AddAttempt: React.FC<{
           <article className="grid justify-items-start gap-4 overflow-y-auto bg-neutral-700/50 px-6 py-4">
             {/* TODO: Remove it or change it to a name??? */}
             <div className="hidden">
-              <TextInput name={form.athleteId.name()} value={athleteId} />
+              <Input name={form.athleteId.name()} value={athleteId} />
               {form.athleteId.error((e) => (
                 <p className="py-2 text-xs text-red-400">{e.message}</p>
               ))}
             </div>
             <section className="flex flex-wrap items-center gap-4">
               {/* className="mt-1 rounded bg-neutral-900/50 py-2 px-3 focus:border-neutral-500 focus:ring-neutral-500 sm:text-sm" */}
-              <label htmlFor={form.attempt1.id()}>Type Attempt</label>
-              <TextInput
+              <Label htmlFor={form.attempt1.id()}>Type Attempt</Label>
+              <Input
                 className="bg-neutral-900/50"
                 name={form.attempt1.name()}
                 placeholder="60.69"
@@ -291,12 +294,7 @@ type BoardType = {
   pinned: string;
 };
 
-export const Board: React.FC<BoardType> = ({
-  data,
-  status,
-  meetName,
-  pinned,
-}) => {
+export function Board({ data, status, meetName, pinned }: BoardType) {
   return (
     <div className="max-w-xs">
       <div className="w-full max-w-xs border-t-2 border-cyan-300 bg-black/90">
@@ -358,9 +356,9 @@ export const Board: React.FC<BoardType> = ({
       </h1>
     </div>
   );
-};
+}
 
-const AthleteView = () => {
+function AthleteView() {
   const bigT = useMeetNameStore((state) => state.meet);
   const willy = useMeetNameStore((state) => state.setNewMeetName);
   const isaac = useMeetNameStore((state) => state.addMeetName);
@@ -388,7 +386,6 @@ const AthleteView = () => {
     setId(id);
   };
 
-  const { data: session } = api.auth.getSession.useQuery();
   const { data, isLoading, refetch } = api.athletes.getAll.useQuery();
 
   // Refetch when new questions come through
@@ -411,7 +408,7 @@ const AthleteView = () => {
     return pinAthleteMutation({ id: athleteId });
   };
 
-  if (isLoading)
+  if (isLoading) {
     return (
       <div className="grid min-h-0 flex-1 grid-rows-3 gap-4 p-4 sm:grid-cols-7 sm:grid-rows-1 sm:gap-8 sm:p-8">
         {/* timetable */}
@@ -498,6 +495,7 @@ const AthleteView = () => {
         </div>
       </div>
     );
+  }
   // mutable not good TODO: make data immutable
   // const Sorted = (): void => {
   //   if (reverseSort) {
@@ -540,53 +538,18 @@ const AthleteView = () => {
             <Card className="animate-fade-in-down relative flex flex-col gap-4 p-4">
               <div className="break-words">Men&apos;s hammer throw 14.00</div>
               <div className="break-words">Women&apos;s hammer throw 16.00</div>
-              <div className="flex items-center justify-between text-gray-300">
-                <Button
-                  variant="ghost"
-                  icon={<HiOutlineEye className="text-xl" />}
-                  className="!px-2 !py-1 text-sm"
-                >
-                  Show athlete
-                </Button>
-                <Button
-                  variant="ghost"
-                  icon={<HiOutlineTrash className="text-xl" />}
-                  className="!px-2 !py-1 text-sm"
-                >
-                  Edit
-                </Button>
-              </div>
             </Card>
             <Card className="animate-fade-in-down relative flex flex-col gap-4 p-4">
-              <Button size="lg" variant="primary">
-                Submit
+              <Button>Submit</Button>
+              <Button variant="secondary">Submit</Button>
+              <Button variant="outline">Submit</Button>
+              <Button variant="ghost">Submit</Button>
+              <Button variant="link">Submit</Button>
+              <Button variant="destructive">Cancel</Button>
+              <Button variant="outline">
+                <PlusIcon className="mr-2 h-4 w-4" /> Add
               </Button>
-              <Button size="lg" variant="primary-inverted">
-                Submit
-              </Button>
-              <Button size="lg" variant="secondary">
-                Submit
-              </Button>
-              <Button size="lg" variant="secondary-inverted">
-                Submit
-              </Button>
-              <Button size="lg" variant="ghost">
-                Submit
-              </Button>
-              <Button size="lg" variant="danger">
-                Cancel
-              </Button>
-              <Button size="lg" variant="text" icon={<HiOutlinePlus />}>
-                Add
-              </Button>
-              <TextInput
-                placeholder="type..."
-                className="w-full"
-                type="text"
-                prefixEl="Name"
-                suffixEl="Asmondgold"
-                maxLength={400}
-              />
+              <Input placeholder="type..." className="w-full" type="text" />
             </Card>
           </AutoAnimate>
         </div>
@@ -594,12 +557,10 @@ const AthleteView = () => {
         <div className="row-span-1 flex sm:col-span-4">
           <Card className="flex flex-1 flex-col divide-y divide-neutral-900">
             <div className="flex">
-              <TextInput
+              <Input
                 placeholder="type name here..."
                 className="w-full rounded-b-none border-none shadow-none focus:border focus:shadow-sm"
                 type="text"
-                prefixEl="Competition"
-                maxLength={400}
                 value={bigT}
                 onChange={(e) => willy(e.target.value)}
               />
@@ -628,7 +589,7 @@ const AthleteView = () => {
                       )
                     ) : (
                       <p className="text-sm font-medium text-neutral-600">
-                        No active tablo {session?.user.name?.toLowerCase()}
+                        No active tablo
                       </p>
                     )}
                   </AutoAnimate>
@@ -639,10 +600,10 @@ const AthleteView = () => {
               <Button
                 variant="ghost"
                 // onClick={() => unpinAthlete()}
-                icon={test ? <HiOutlineEye /> : <HiOutlineEyeOff />}
                 className="flex items-center justify-center gap-2 rounded-none !rounded-bl p-3 text-sm sm:p-4 sm:text-base"
                 onClick={() => setTest(!test)}
               >
+                {test ? <EyeIcon /> : <EyeOffIcon />}
                 {test ? "Show" : "Hide"}
               </Button>
               <Button
@@ -680,16 +641,16 @@ const AthleteView = () => {
               <Button
                 // className="relative z-10 -my-2 flex items-center gap-1.5 rounded py-2 px-2  hover:bg-neutral-900/50 hover:text-white"
                 variant="ghost"
-                size="xl"
+                size="icon"
                 onClick={() => setReverseSort(!reverseSort)}
                 // onClick={() => Sorted()}
                 className="!p-2"
               >
-                {reverseSort ? <HiSortDescending /> : <HiSortAscending />}
+                {reverseSort ? <SortDescIcon /> : <SortAscIcon />}
               </Button>
             </menu>
-            <Button variant="primary" onClick={() => assIn()}>
-              <HiPlus className="-mx-1.5" />
+            <Button variant="ghost" size="icon" onClick={() => assIn()}>
+              <PlusIcon className="-mx-1.5" />
             </Button>
           </div>
           <AutoAnimate className="flex min-h-0 flex-1 flex-col rounded-lg bg-neutral-800/25">
@@ -750,10 +711,10 @@ const AthleteView = () => {
                       {ath.attempts.length < 6 && (
                         <Button
                           variant="ghost"
-                          icon={<HiPlus className="text-base" />}
                           className="-my-1 !px-2 !py-1 text-sm"
                           onClick={() => toggle(ath.id)}
                         >
+                          <PlusIcon className="text-base" />
                           Add
                         </Button>
                       )}
@@ -762,23 +723,21 @@ const AthleteView = () => {
                       <Button
                         onClick={() => pinAthlete({ athleteId: ath.id })}
                         variant="ghost"
-                        icon={
-                          // 1 === 1 ? (
-                          <HiOutlineEye className="text-xl" />
-                          // ) : (
-                          //   <HiOutlineEyeOff className="text-xl" />
-                          // )
-                        }
                         className="-mx-2 -my-1 !px-2 !py-1 text-sm"
                       >
+                        {/* // 1 === 1 ? ( */}
+                        <EyeIcon className="mr-2 h-4 w-4" />
+                        {/* // ) : ( */}
+                        {/* //   <EyeOffIcon className="text-xl" /> */}
+                        {/* // ) */}
                         Show athlete
                       </Button>
                       <Button
                         variant="ghost"
-                        icon={<HiOutlineTrash className="text-xl" />}
                         className="-mx-2 -my-1 !px-2 !py-1 text-sm"
                         onClick={() => deleted.mutate({ id: ath.id })}
                       >
+                        <Trash2Icon className="mr-2 h-4 w-4" />
                         Remove
                       </Button>
                     </div>
@@ -786,24 +745,25 @@ const AthleteView = () => {
                 </li>
               ))}
               {data?.length === 0 ? (
-                <Button
-                  onClick={() => assIn()}
-                  icon={<HiPlus className="text-base" />}
-                  variant="primary"
-                  size="lg"
-                >
+                <Button onClick={() => assIn()} variant="ghost" size="icon">
+                  i
+                  <PlusIcon className="text-base" />
                   Add Athlete
                 </Button>
               ) : (
                 <Button
                   onClick={() => clearAll.mutate()}
                   disabled={clearAll.isLoading}
-                  loading={clearAll.isLoading}
-                  size="lg"
-                  variant="primary"
                   className="sticky bottom-0 z-10 shadow"
                 >
-                  Clear all
+                  {clearAll.isLoading ? (
+                    <>
+                      <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+                      please wait
+                    </>
+                  ) : (
+                    "Clear all"
+                  )}
                 </Button>
               )}
             </AutoAnimate>
@@ -820,7 +780,7 @@ const AthleteView = () => {
       {athlete && <portals.OutPortal node={portalSnob} />}
     </>
   );
-};
+}
 
 function AthleteViewWrapper() {
   const { data: sessionData } = useSession();
@@ -828,9 +788,9 @@ function AthleteViewWrapper() {
   if (!sessionData?.user.id) return null;
 
   return (
-    <PusherProvider slug={`user-${sessionData.user.id}`}>
-      <AthleteView />
-    </PusherProvider>
+    // <PusherProvider slug={`user-${sessionData.user.id}`}>
+    <AthleteView />
+    // </PusherProvider>
   );
 }
 
@@ -849,47 +809,49 @@ function Embed() {
     <Button
       className="-m-2 !p-2"
       onClick={() => copyUrlToClipboard(`/embed/1`)}
-      variant="ghost"
-      size="lg"
-      icon={
-        copy ? (
-          <HiOutlineClipboardCheck className="text-gray-100" />
-        ) : (
-          <HiOutlineClipboardCopy />
-        )
-      }
+      variant="outline"
+      size="icon"
     >
-      <span className="sr-only text-sm sm:not-sr-only">Embed url</span>
+      {copy ? (
+        <ClipboardCheckIcon className="text-gray-100" />
+      ) : (
+        <ClipboardCopyIcon />
+      )}
+      <span className="sr-only">Embed url</span>
     </Button>
   );
 }
 
-const NavButtons = () => {
+function NavButtons() {
   const { data: sessionData } = useSession();
   return (
     <nav className="flex gap-6">
       <h1 className="flex items-center gap-2 text-base font-medium">
         {sessionData?.user.image && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={sessionData.user.image}
-            alt="pro pic"
-            className="w-8 rounded-full"
-          />
+          <Avatar>
+            <AvatarImage
+              src={sessionData.user.image}
+              alt={sessionData.user.name!}
+            />
+            <AvatarFallback>
+              {sessionData.user.name
+                ?.match(/\b(\w)/g)
+                ?.join("")
+                .toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
         )}
         <span className="sr-only sm:not-sr-only">{sessionData?.user.name}</span>
       </h1>
-      <Button variant="primary" size="lg">
-        <div className="flex items-center" onClick={() => void signOut()}>
-          <HiOutlineLogout />
-          <span className="sr-only sm:not-sr-only">&nbsp; Logout</span>
-        </div>
+      <Button onClick={() => void signOut()}>
+        <LogOutIcon />
+        <span className="sr-only sm:not-sr-only">&nbsp; Logout</span>
       </Button>
     </nav>
   );
-};
+}
 
-const HomeContent = () => {
+function HomeContent() {
   const { data: sessionData } = useSession();
 
   if (!sessionData) {
@@ -908,14 +870,8 @@ const HomeContent = () => {
           An easy way to curate questions from your audience and embed them in
           your OBS.
         </div>
-        <Button
-          variant="secondary-inverted"
-          size="xl"
-          onClick={() => void signIn("discord")}
-        >
-          <div className="flex items-center">
-            <FaDiscord /> &nbsp; Sign In
-          </div>
+        <Button variant="secondary" onClick={() => signIn("discord")}>
+          <FaDiscord className="mr-2 h-4 w-4" /> &nbsp; Sign In
         </Button>
       </div>
     );
@@ -937,9 +893,9 @@ const HomeContent = () => {
       <LazyAthleteView />
     </div>
   );
-};
+}
 
-const Home: NextPage = () => {
+export default function Home() {
   return (
     <>
       <Head>
@@ -984,6 +940,4 @@ const Home: NextPage = () => {
       </div>
     </>
   );
-};
-
-export default Home;
+}

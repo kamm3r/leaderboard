@@ -8,22 +8,18 @@ import {
 
 import { pusherServerClient } from "~/server/pusher";
 
-export const addAthleteInput = z.object({
+const addAthleteInput = z.object({
   firstName: z.string(),
   lastName: z.string(),
   club: z.string(),
   pb: z.string().optional().default(""),
   sb: z.string().optional().default(""),
 });
-
-export type AddAthleteInputType = z.infer<typeof addAthleteInput>;
-
-export const addAttemptInput = z.object({
+ 
+const addAttemptInput = z.object({
   attempt1: z.string(),
   athleteId: z.string().cuid(),
 });
-
-export type AddAttemptInputType = z.infer<typeof addAttemptInput>;
 
 export const athletesRouter = createTRPCRouter({
   addAthlete: publicProcedure
