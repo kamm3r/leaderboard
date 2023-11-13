@@ -6,6 +6,7 @@ import { SessionProvider } from "next-auth/react";
 import { api } from "~/utils/api";
 
 import "~/styles/globals.css";
+import { GeistSans } from "geist/font/sans";
 
 const MyApp: AppType<{ session: Session | null }> = ({
   Component,
@@ -18,7 +19,9 @@ const MyApp: AppType<{ session: Session | null }> = ({
       enableSystem
       disableTransitionOnChange>
       <SessionProvider session={session}>
-        <Component {...pageProps} />
+        <main className={GeistSans.className}>
+          <Component {...pageProps} />
+        </main>
       </SessionProvider>
     </ThemeProvider>
   );

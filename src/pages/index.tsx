@@ -15,23 +15,47 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
 import Head from "next/head";
 import Link from "next/link";
-import { useTRPCForm } from "node_modules/trpc-form/dist";
 import React, { useState } from "react";
 import { FaDiscord } from "react-icons/fa";
 import { z } from "zod";
 import { AutoAnimate } from "~/@/components/auto-animate";
-import { Card, CardContent, CardFooter, CardHeader } from "~/@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "~/@/components/ui/card";
 import { Input } from "~/@/components/ui/input";
 import { api, type RouterOutputs } from "~/utils/api";
-import { PusherProvider } from "~/utils/pusher";
+//import { PusherProvider } from "~/utils/pusher";
 import { useMeetNameStore } from "~/utils/store";
-import { Label } from "~/@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "~/@/components/ui/avatar";
 import { Button } from "~/@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "~/@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "~/@/components/ui/dialog";
 import { ThemeToggle } from "~/@/components/themeToggle";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/@/components/ui/tabs";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "~/@/components/ui/form";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "~/@/components/ui/tabs";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "~/@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -53,22 +77,21 @@ function AddAthlete() {
   const [open, setOpen] = useState(false);
   const addAthlete = api.athletes.addAthlete.useMutation({
     onSuccess: async () => {
-      await new Promise((r) => setTimeout(r, 2000)).then(() => setOpen(false))
-    }
+      await new Promise((r) => setTimeout(r, 2000)).then(() => setOpen(false));
+    },
   });
 
   const form = useForm<z.infer<typeof addAthleteInput>>({
-    resolver: zodResolver(addAthleteInput)
-  })
+    resolver: zodResolver(addAthleteInput),
+  });
 
-
-  function onSubmit(values: z.infer<typeof addAthleteInput>) {
+  async function onSubmit(values: z.infer<typeof addAthleteInput>) {
     addAthlete.mutate(values);
-    utils.athletes.invalidate();
+    await utils.athletes.invalidate();
   }
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="icon">
           <PlusIcon className="-mx-1.5" />
@@ -78,7 +101,7 @@ function AddAthlete() {
         <DialogHeader>
           <DialogTitle>New Athlete</DialogTitle>
           <DialogDescription>
-            Make changes to your profile here. Click save when you're done.
+            Make changes to your profile here. Click save when you&apos;re done.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -168,14 +191,15 @@ function AddAthlete() {
               <Button type="button" variant="destructive">
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                disabled={form.formState.isSubmitting}
-              >
+              <Button type="submit" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting ? (
-                  <><Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> please wait</>
-                ) :
-                  'Confirm'}
+                  <>
+                    <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> please
+                    wait
+                  </>
+                ) : (
+                  "Confirm"
+                )}
               </Button>
             </DialogFooter>
           </form>
@@ -183,16 +207,15 @@ function AddAthlete() {
       </DialogContent>
     </Dialog>
   );
-};
-
+}
 
 function AddAttempt({ athleteId }: { athleteId?: string }) {
   const utils = api.useUtils();
   const [open, setOpen] = useState(false);
   const addAttempt = api.athletes.addAttempt.useMutation({
     onSuccess: async () => {
-      await new Promise((r) => setTimeout(r, 2000)).then(() => setOpen(false))
-    }
+      await new Promise((r) => setTimeout(r, 2000)).then(() => setOpen(false));
+    },
   });
 
   const form = useForm<z.infer<typeof addAttemptInput>>({
@@ -200,12 +223,11 @@ function AddAttempt({ athleteId }: { athleteId?: string }) {
     defaultValues: {
       athleteId,
     },
-  })
+  });
 
-
-  function onSubmit(values: z.infer<typeof addAttemptInput>) {
+  async function onSubmit(values: z.infer<typeof addAttemptInput>) {
     addAttempt.mutate(values);
-    utils.athletes.invalidate();
+    await utils.athletes.invalidate();
   }
 
   return (
@@ -219,7 +241,7 @@ function AddAttempt({ athleteId }: { athleteId?: string }) {
         <DialogHeader>
           <DialogTitle>Add Attempt</DialogTitle>
           <DialogDescription>
-            Make changes to your profile here. Click save when you're done.
+            Make changes to your profile here. Click save when you&apos;re done.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -244,23 +266,18 @@ function AddAttempt({ athleteId }: { athleteId?: string }) {
               )}
             />
             <DialogFooter>
-              <Button
-                type="button"
-                variant="destructive"
-              >
+              <Button type="button" variant="destructive">
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                disabled={form.formState.isSubmitting}
-              >
+              <Button type="submit" disabled={form.formState.isSubmitting}>
                 {form.formState.isLoading ? (
                   <>
                     <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
                     please wait
                   </>
-                ) :
-                  "Confirm"}
+                ) : (
+                  "Confirm"
+                )}
               </Button>
             </DialogFooter>
           </form>
@@ -268,7 +285,7 @@ function AddAttempt({ athleteId }: { athleteId?: string }) {
       </DialogContent>
     </Dialog>
   );
-};
+}
 
 type StatusProp = "Qualification" | "Semi-Final" | "Final";
 
@@ -301,8 +318,8 @@ export function Board({ data, status, meetName, pinned }: BoardType) {
                 <span>
                   {a.attempts.length > 0
                     ? Math.max(
-                      ...a.attempts.map((cock) => parseFloat(cock.attempt1)),
-                    )
+                        ...a.attempts.map((cock) => parseFloat(cock.attempt1)),
+                      )
                     : "-"}
                 </span>
               </div>
@@ -376,7 +393,7 @@ function AthleteView() {
 
   if (isLoading) {
     return (
-      <div className="grid min-h-0 flex-1 grid-rows-3 gap-4 p-4 sm:grid-cols-7 sm:grid-rows-1 sm:gap-8 sm:p-8">
+      <main className="grid min-h-0 flex-1 grid-rows-3 gap-4 p-4 sm:grid-cols-7 sm:grid-rows-1 sm:gap-8 sm:p-8">
         {/* timetable */}
         <div className="col-span-1 row-span-1 flex flex-col gap-4">
           <div className="flex items-center justify-between">
@@ -459,7 +476,7 @@ function AthleteView() {
             </AutoAnimate>
           </AutoAnimate>
         </div>
-      </div>
+      </main>
     );
   }
   // mutable not good TODO: make data immutable
@@ -472,7 +489,7 @@ function AthleteView() {
     : otherAthlete;
 
   return (
-    <div className="grid min-h-0 flex-1 grid-rows-3 gap-4 p-4 sm:grid-cols-7 sm:grid-rows-1 sm:gap-8 sm:p-8">
+    <main className="grid min-h-0 flex-1 grid-rows-3 gap-4 p-4 sm:grid-cols-7 sm:grid-rows-1 sm:gap-8 sm:p-8">
       {/* timetable */}
       <div className="col-span-1 row-span-1 flex flex-col gap-4">
         <header className="flex items-center justify-between">
@@ -498,87 +515,84 @@ function AthleteView() {
         </AutoAnimate>
       </div>
       {/* Preview window */}
-      <div className="row-span-1 flex sm:col-span-4">
-        <Card className="flex flex-1 flex-col divide-y divide-neutral-900">
-          <div className="flex">
-            <Input
-              placeholder="type name here..."
-              className="w-full rounded-b-none border-none shadow-none focus:border focus:shadow-sm"
-              type="text"
-              value={bigT}
-              onChange={(e) => willy(e.target.value)}
-            />
-            <Button variant="ghost" onClick={() => isaac()}>
-              Set
-            </Button>
+      <Card className="row-span-1 flex flex-1 flex-col divide-y divide-neutral-900 sm:col-span-4">
+        <div className="flex">
+          <Input
+            placeholder="type name here..."
+            className="w-full rounded-b-none border-none"
+            type="text"
+            value={bigT}
+            onChange={(e) => willy(e.target.value)}
+          />
+          <Button variant="ghost" onClick={() => isaac()}>
+            Set
+          </Button>
+        </div>
+        <div className="flex min-h-0 flex-1 flex-col p-4">
+          <div className="flex items-baseline justify-between">
+            <h2 className="font-bold">{test ? "Active" : "Inactive"} Tablo </h2>
+            <Embed />
           </div>
-          <div className="flex min-h-0 flex-1 flex-col p-4">
-            <div className="flex min-h-0 flex-1 flex-col">
-              <div className="flex items-baseline justify-between">
-                <h2 className="font-bold">
-                  {test ? "Active" : "Inactive"} Tablo{" "}
-                </h2>
-                <Embed />
-              </div>
-              <div className="min-h-0 flex-1 overflow-y-auto">
-                <AutoAnimate className="flex min-h-full items-center justify-center ">
-                  {test ? (
-                    data && (
-                      <Board
-                        data={data}
-                        status={"Final"}
-                        meetName={bigT}
-                        pinned={pinndedId ? pinndedId : ""}
-                      />
-                    )
-                  ) : (
-                    <p className="text-sm font-medium text-neutral-600">
-                      No active tablo
-                    </p>
-                  )}
-                </AutoAnimate>
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-4 divide-x divide-neutral-900">
-            <Button
-              variant="ghost"
-              className="flex items-center justify-center gap-2 rounded-none !rounded-bl p-3 text-sm sm:p-4 sm:text-base"
-              onClick={() => setTest(!test)}
-            >
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <AutoAnimate className="flex min-h-full items-center justify-center ">
               {test ? (
-                <><EyeIcon className="h-4 w-4" /> Show</>
+                data && (
+                  <Board
+                    data={data}
+                    status={"Final"}
+                    meetName={bigT}
+                    pinned={pinndedId ? pinndedId : ""}
+                  />
+                )
               ) : (
-                <><EyeOffIcon className="h-4 w-4" /> Hide</>
+                <p className="text-sm font-medium text-neutral-600">
+                  No active tablo
+                </p>
               )}
-            </Button>
-            <Button
-              variant="ghost"
-              className="flex items-center justify-center gap-2 rounded-none border-b-0 border-t-0 p-3 text-sm sm:p-4 sm:text-base"
-            //  TODO maybe fix
-            >
-              **All Athlete Results**
-            </Button>
-            <Button
-              variant="ghost"
-              className="flex items-center justify-center gap-2 rounded-none !rounded-br border-b-0 border-t-0 p-3 text-sm sm:p-4 sm:text-base"
-              onClick={() => setShow(!show)}
-            >
-              Timetable
-            </Button>
-            <Button
-              variant="ghost"
-              className="flex items-center justify-center gap-2 rounded-none !rounded-br border-b-0 border-t-0 p-3 text-sm sm:p-4 sm:text-base"
-              onClick={() => setShow(!show)}
-            >
-              Next Athlete
-            </Button>
+            </AutoAnimate>
           </div>
-        </Card>
-      </div>
+        </div>
+        <div className="grid grid-cols-4 divide-x divide-neutral-900">
+          <Button
+            variant="ghost"
+            className="flex gap-2 rounded-none !rounded-bl p-3 text-sm sm:p-4 sm:text-base"
+            onClick={() => setTest(!test)}
+          >
+            {test ? (
+              <>
+                <EyeIcon className="h-4 w-4" /> Show
+              </>
+            ) : (
+              <>
+                <EyeOffIcon className="h-4 w-4" /> Hide
+              </>
+            )}
+          </Button>
+          <Button
+            variant="ghost"
+            className="rounded-none p-3 text-sm sm:p-4 sm:text-base"
+          >
+            **All Athlete Results**
+          </Button>
+          <Button
+            variant="ghost"
+            className="rounded-none p-3 text-sm sm:p-4 sm:text-base"
+            onClick={() => setShow(!show)}
+          >
+            Timetable
+          </Button>
+          <Button
+            variant="ghost"
+            className=" rounded-none !rounded-br p-3 text-sm sm:p-4 sm:text-base"
+            onClick={() => setShow(!show)}
+          >
+            Next Athlete
+          </Button>
+        </div>
+      </Card>
       {/* Athletes column */}
       <div className="flex flex-col gap-2 sm:col-span-2">
-        <div className="flex items-center justify-between">
+        <header className="flex items-center justify-between">
           <menu className="flex items-center gap-1.5 font-medium">
             <li>Athletes</li>
             <li className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-neutral-800 text-xs font-extrabold">
@@ -588,96 +602,98 @@ function AthleteView() {
               variant="ghost"
               size="icon"
               onClick={() => setReverseSort(!reverseSort)}
-              // onClick={() => Sorted()}
-              className="!p-2"
+              className="p-2"
             >
-              {reverseSort ? <SortDescIcon className="h-4 w-4" /> : <SortAscIcon className="h-4 w-4" />}
+              {reverseSort ? (
+                <SortDescIcon className="h-4 w-4" />
+              ) : (
+                <SortAscIcon className="h-4 w-4" />
+              )}
             </Button>
           </menu>
           <AddAthlete />
-        </div>
-        <AutoAnimate className="flex min-h-0 flex-1 flex-col rounded-lg bg-neutral-800/25">
-          <Tabs defaultValue="men">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="men">Men</TabsTrigger>
-              <TabsTrigger value="women">Women</TabsTrigger>
-              <TabsTrigger value="child">Child</TabsTrigger>
-            </TabsList>
-            <TabsContent value="men">
-              <AutoAnimate
-                as="ul"
-                className="flex flex-col gap-2 overflow-y-auto p-2"
+        </header>
+        <Tabs
+          defaultValue="men"
+          className="flex min-h-0 flex-1 flex-col rounded-lg bg-neutral-800/70"
+        >
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="men">Men</TabsTrigger>
+            <TabsTrigger value="women">Women</TabsTrigger>
+            <TabsTrigger value="child">Child</TabsTrigger>
+          </TabsList>
+          <TabsContent
+            value="men"
+            className="relative flex flex-col gap-2 overflow-x-hidden overflow-y-scroll p-2"
+          >
+            {athletesSorted.map((ath) => (
+              <Card
+                key={ath.id}
+                className="animate-fade-in-down relative flex flex-col gap-4 p-4"
               >
-                {athletesSorted.map((ath) => (
-                  <li key={ath.id}>
-                    <Card className="animate-fade-in-down relative flex flex-col gap-4 p-4">
-                      <CardHeader className="flex-row items-center gap-3 break-words p-0">
-                        <p className="">{ath.name}</p>
-                        <span className="text-xs opacity-70">
-                          PB: {ath.PB} SB: {ath.SB}
-                        </span>
-                      </CardHeader>
-                      <CardContent className="flex items-center gap-2 p-0">
-                        {ath.attempts.map((at) => (
-                          <p
-                            key={at.id}
-                            className="-my-1 rounded bg-neutral-800/50 px-2 py-1 text-sm"
-                          >
-                            {at.attempt1}
-                          </p>
-                        ))}
-                        {ath.attempts.length < 6 && (
-                          <AddAttempt athleteId={ath.id} />
-                        )}
-                      </CardContent>
-                      <CardFooter className="flex items-center justify-between p-0">
-                        <Button
-                          onClick={() => pinAthlete({ athleteId: ath.id })}
-                          variant="ghost"
-                          className="-mx-2 -my-1 px-2 py-1 text-sm"
-                        >
-                          {/* // 1 === 1 ? ( */}
-                          <EyeIcon className="mr-2 h-4 w-4" />
-                          {/* // ) : ( */}
-                          {/* //   <EyeOffIcon className="text-xl" /> */}
-                          {/* // ) */}
-                          Show athlete
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          className="-mx-2 -my-1 px-2 py-1 text-sm"
-                          onClick={() => deleted.mutate({ id: ath.id })}
-                        >
-                          <Trash2Icon className="mr-2 h-4 w-4" /> Remove
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                  </li>
-                ))}
-                {data?.length === 0 ? (
-                  <AddAthlete />
-                ) : (
+                <CardHeader className="flex-row items-center gap-3 break-words p-0">
+                  <p className="">{ath.name}</p>
+                  <span className="text-xs opacity-70">
+                    PB: {ath.PB} SB: {ath.SB}
+                  </span>
+                </CardHeader>
+                <CardContent className="flex items-center gap-2 p-0">
+                  {ath.attempts.map((at) => (
+                    <p
+                      key={at.id}
+                      className="-my-1 rounded bg-neutral-800/50 px-2 py-1 text-sm"
+                    >
+                      {at.attempt1}
+                    </p>
+                  ))}
+                  {ath.attempts.length < 6 && <AddAttempt athleteId={ath.id} />}
+                </CardContent>
+                <CardFooter className="flex items-center justify-between p-0">
                   <Button
-                    onClick={() => clearAll.mutate()}
-                    disabled={clearAll.isLoading}
-                    className="sticky bottom-0 z-10 shadow"
+                    onClick={() => pinAthlete({ athleteId: ath.id })}
+                    variant="ghost"
+                    className="-mx-2 -my-1 px-2 py-1 text-sm"
                   >
-                    {clearAll.isLoading ? (
-                      <>
-                        <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
-                        please wait
-                      </>
-                    ) : (
-                      "Clear all"
-                    )}
+                    {/* // 1 === 1 ? ( */}
+                    <EyeIcon className="mr-2 h-4 w-4" />
+                    {/* // ) : ( */}
+                    {/* //   <EyeOffIcon className="text-xl" /> */}
+                    {/* // ) */}
+                    Show athlete
                   </Button>
+                  <Button
+                    variant="ghost"
+                    className="-mx-2 -my-1 px-2 py-1 text-sm"
+                    onClick={() => deleted.mutate({ id: ath.id })}
+                  >
+                    <Trash2Icon className="mr-2 h-4 w-4" /> Remove
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+            {data?.length === 0 ? (
+              <AddAthlete />
+            ) : (
+              <Button
+                variant="default"
+                onClick={() => clearAll.mutate()}
+                disabled={clearAll.isLoading}
+                className="sticky bottom-0 z-10 shadow"
+              >
+                {clearAll.isLoading ? (
+                  <>
+                    <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+                    please wait
+                  </>
+                ) : (
+                  "Clear all"
                 )}
-              </AutoAnimate>
-            </TabsContent>
-          </Tabs>
-        </AutoAnimate>
+              </Button>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
-    </div>
+    </main>
   );
 }
 
