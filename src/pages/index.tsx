@@ -27,7 +27,7 @@ import {
 } from "~/@/components/ui/card";
 import { Input } from "~/@/components/ui/input";
 import { api, type RouterOutputs } from "~/utils/api";
-//import { PusherProvider } from "~/utils/pusher";
+import { PusherProvider } from "~/utils/pusher";
 import { useMeetNameStore } from "~/utils/store";
 import { Avatar, AvatarFallback, AvatarImage } from "~/@/components/ui/avatar";
 import { Button } from "~/@/components/ui/button";
@@ -318,8 +318,8 @@ export function Board({ data, status, meetName, pinned }: BoardType) {
                 <span>
                   {a.attempts.length > 0
                     ? Math.max(
-                        ...a.attempts.map((cock) => parseFloat(cock.attempt1)),
-                      )
+                      ...a.attempts.map((cock) => parseFloat(cock.attempt1)),
+                    )
                     : "-"}
                 </span>
               </div>
@@ -703,9 +703,9 @@ function AthleteViewWrapper() {
   if (!sessionData?.user.id) return null;
 
   return (
-    // <PusherProvider slug={`user-${sessionData.user.id}`}>
-    <AthleteView />
-    // </PusherProvider>
+    //<PusherProvider slug={`user-${sessionData.user.id}`} >
+      <AthleteView />
+    //</PusherProvider>
   );
 }
 

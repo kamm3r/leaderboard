@@ -4,7 +4,7 @@ import Pusher, {
   type PresenceChannel,
   type Channel,
 } from "pusher-js";
-import { useStoreWithEqualityFn } from "zustand/traditional";
+import { useStore } from "zustand";
 import { createStore, type StoreApi } from "zustand/vanilla";
 
 type MembersType = Pick<Members, "members">;
@@ -23,11 +23,6 @@ type PusherState = StoreApi<PusherStore> extends { getState: () => infer T }
 type MemberDict = Record<string, MembersType>;
 
 const pusher_key = process.env.NEXT_PUBLIC_PUSHER_APP_KEY!;
-const pusher_server_host = process.env.NEXT_PUBLIC_PUSHER_SERVER_HOST!;
-const pusher_server_port = parseInt(
-  process.env.NEXT_PUBLIC_PUSHER_SERVER_PORT!,
-  10,
-);
 const pusher_server_tls = process.env.NEXT_PUBLIC_PUSHER_SERVER_TLS === "true";
 const pusher_server_cluster = process.env.NEXT_PUBLIC_PUSHER_SERVER_CLUSTER!;
 
@@ -39,8 +34,8 @@ function createPusherStore(slug: string): StoreApi<PusherStore> {
   } else {
     const randomUserId = `random-user-id:${Math.random().toFixed(7)}`;
     pusherClient = new Pusher(pusher_key, {
-      wsHost: pusher_server_host,
-      wsPort: pusher_server_port,
+      wsHost: "localhost",
+      wsPort: 6001,
       enabledTransports: pusher_server_tls ? ["ws", "wss"] : ["ws"],
       forceTLS: pusher_server_tls,
       cluster: pusher_server_cluster,
@@ -92,7 +87,7 @@ function usePusherStore<StateSlice = PusherState>(
   if (!store) {
     throw new Error("Missing PusherContext.Provider in the tree");
   }
-  return useStoreWithEqualityFn(store, selector, equalityFn);
+  return useStore(store, selector, equalityFn);
 }
 
 export function PusherProvider({
