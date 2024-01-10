@@ -5,12 +5,9 @@ Leaderboard for streaming (Throwing events)
 ## Getting Started
 
 ```bash
-# npm
-npm i
+# setup for development
+npm install
 npm run dev
-# pnpm
-pnpm i
-pnpm dev
 ```
 
 # Todo
