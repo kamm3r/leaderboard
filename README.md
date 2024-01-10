@@ -4,7 +4,7 @@ Leaderboard for streaming (Throwing events)
 
 ## Getting Started
 
-```bash
+```sh
 # setup for development
 npm install
 npm run dev
